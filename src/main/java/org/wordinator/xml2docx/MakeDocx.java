@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.xmlbeans.XmlObject;
 import org.wordinator.xml2docx.generator.DocxGeneratingOutputUriResolver;
+import org.wordinator.xml2docx.generator.DocxGenerationException;
 import org.wordinator.xml2docx.generator.DocxGenerator;
 import org.wordinator.xml2docx.saxon.Log4jSaxonLogger;
 import org.wordinator.xml2docx.saxon.LoggingMessageListener;
@@ -43,7 +44,7 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.trans.XmlCatalogResolver;
 
 /**
- * Command-line application to generate DOCX files from
+ * Command-line application to generate DOCX files from SWPX files.
  *
  * <p>You can use this directly as the main file run from the command line
  * or as a helper class to build your own command-line handler or integrated
@@ -70,24 +71,20 @@ public class MakeDocx {
   public static final String XSLT_PARAM_CHUNKLEVEL = "chunklevel";
 
   public static void main( String[] args ) throws Exception {
-    boolean GOOD_OPTIONS = false;
-    Options options = null;
-    try {
-      options = buildOptions();
-      GOOD_OPTIONS = true;
-    } catch (Exception e) {
-      //
-    }
+    Options options = buildOptions();
 
     try {
       handleCommandLine(options, args);
     } catch (ParseException e) {
-      GOOD_OPTIONS = false;
-    }
+      System.err.println("ERROR: " + e.getMessage());
+      System.err.println();
 
-    if (!GOOD_OPTIONS) {
       HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp( "wordinator", options, true );
+      formatter.printHelp("wordinator", options, true);
+      System.exit(1);
+    } catch (DocxGenerationException e) {
+      System.err.println("ERROR: " + e.getMessage());
+      System.exit(1);
     }
   }
 
@@ -135,18 +132,18 @@ public class MakeDocx {
 
     File inFile = new File(inDocPath);
     if (!inFile.exists()) {
-      throw new RuntimeException("Input file '" + inFile.getAbsolutePath() + "' not found. Cannot continue.");
+      throw new DocxGenerationException("Input file '" + inFile.getAbsolutePath() + "' not found. Cannot continue.");
     }
     File templateFile = new File(templatePath);
     if (!templateFile.exists()) {
-      throw new RuntimeException("Template file '" + templateFile.getAbsolutePath() + "' not found. Cannot continue.");
+      throw new DocxGenerationException("Template file '" + templateFile.getAbsolutePath() + "' not found. Cannot continue.");
     }
 
     XWPFDocument templateDoc = null;
     try {
       templateDoc = new XWPFDocument(new FileInputStream(templateFile));
     } catch (Exception e) {
-      throw new RuntimeException(e.getClass().getSimpleName() +  " loading template DOCX file \"" + templateFile.getAbsolutePath() + "\"");
+      throw new RuntimeException("Error loading template DOCX file \"" + templateFile.getAbsolutePath() + "\"", e);
     }
 
     File outFile = new File(docxPath);
@@ -165,12 +162,8 @@ public class MakeDocx {
     if (!outDir.exists()) {
       log.info("Making output directory '" + outDir.getAbsolutePath() + "'...");
       if (!outDir.mkdirs()) {
-        try {
-          templateDoc.close();
-        } catch (IOException e) {
-          // Don't care about this should it ever happen.
-        }
-        throw new RuntimeException("Failed to create output directory '" + outDir.getAbsolutePath() + "'. Cannot continue");
+        silentlyClose(templateDoc);
+        throw new DocxGenerationException("Failed to create output directory '" + outDir.getAbsolutePath() + "'. Cannot continue");
       }
     }
 
@@ -178,12 +171,8 @@ public class MakeDocx {
     if (null != transformPath) {
       transformFile = new File(transformPath);
       if (!transformFile.exists()) {
-        try {
-          templateDoc.close();
-        } catch (IOException e) {
-          // Don't care about this should it ever happen.
-        }
-        throw new RuntimeException("XSLT transform file '" + transformFile.getAbsolutePath() + "' not found. Cannot continue.");
+        silentlyClose(templateDoc);
+        throw new DocxGenerationException("XSLT transform file '" + transformFile.getAbsolutePath() + "' not found. Cannot continue.");
       }
       if (!xsltParameters.containsKey(XSLT_PARAM_CHUNKLEVEL)) {
         xsltParameters.put(XSLT_PARAM_CHUNKLEVEL, chunkLevel);
@@ -201,14 +190,8 @@ public class MakeDocx {
           transformXml(inFile, outDir, templateDoc, transformFile, catalog, xsltParameters);
         }
       }
-    } catch (Exception e) {
-      throw new RuntimeException(e.getClass().getSimpleName() + ": " + e.getMessage(), e);
     } finally {
-      try {
-        templateDoc.close();
-      } catch (IOException e) {
-        // Don't care about this should it ever happen.
-      }
+      silentlyClose(templateDoc);
     }
 
   }
@@ -232,7 +215,7 @@ public class MakeDocx {
     // Apply transform to book file to generate Simple WP XML documents
 
     if (transformFile == null) {
-      throw new RuntimeException("-x (transform) parameter not specified. If the input is a _Book.xml file, you must specify the -x parameter");
+      throw new DocxGenerationException("-x (transform) parameter not specified. If the input is a _Book.xml file, you must specify the -x parameter");
     }
 
     StandardErrorListener errorListener = new StandardErrorListener();
@@ -250,11 +233,11 @@ public class MakeDocx {
       try {
         Class<?> klass = processor.getClass().getClassLoader().loadClass(APACHE_RESOLVER_CLASS);
         if (klass == null) {
-          throw new RuntimeException("-k/-catalog option specified but failed to load class " + APACHE_RESOLVER_CLASS);
+          throw new DocxGenerationException("-k/-catalog option specified but failed to load class " + APACHE_RESOLVER_CLASS);
         }
         XmlCatalogResolver.setCatalog(catalog, processor.getUnderlyingConfiguration(), false);
-      } catch (XPathException err) {
-        throw new XPathException("Failed to load Apache catalog resolver library", err);
+      } catch (XPathException e) {
+        throw new RuntimeException("Failed to load Apache catalog resolver library", e);
       }
     }
 
@@ -291,8 +274,7 @@ public class MakeDocx {
 
     log.info("Applying transform to source document " + docFile.getAbsolutePath() + "...");
 
-    @SuppressWarnings("unused")
-      XdmValue result = transformer.applyTemplates(docSource);
+    transformer.applyTemplates(docSource);
     log.info("Transform applied.");
   }
 
@@ -302,7 +284,7 @@ public class MakeDocx {
    * @param outFile If this is a directory, result filename is constructed from input filename.
    * @param templateDoc Template DOCX document used when constructing new document
    */
-  public static void handleSingleSwpxDoc(File inFile, File outFile, XWPFDocument templateDoc) {
+  public static void handleSingleSwpxDoc(File inFile, File outFile, XWPFDocument templateDoc) throws Exception {
 
     File effectiveOutFile = outFile;
     if (outFile.isDirectory()) {
@@ -310,23 +292,18 @@ public class MakeDocx {
       effectiveOutFile = new File(outFile, outName);
     }
 
-    try {
-      log.info("Generating DOCX file \"" + effectiveOutFile.getAbsolutePath() + "\"");
-      if (effectiveOutFile.exists()) {
-        if (!effectiveOutFile.delete()) {
-          log.error("Could not delete existing DOCX file \"" + effectiveOutFile.getAbsolutePath() + "\". Skipping SWPX file.");
-          return;
-        }
+    log.info("Generating DOCX file \"" + effectiveOutFile.getAbsolutePath() + "\"");
+    if (effectiveOutFile.exists()) {
+      if (!effectiveOutFile.delete()) {
+        log.error("Could not delete existing DOCX file \"" + effectiveOutFile.getAbsolutePath() + "\". Skipping SWPX file.");
+        return;
       }
-      DocxGenerator generator = new DocxGenerator(inFile, effectiveOutFile, templateDoc);
-      XmlObject xml = XmlObject.Factory.parse(inFile);
-
-      generator.generate(xml);
-      log.info("DOCX file generated.");
-    } catch (Throwable e) {
-      log.error("Unexpected " + e.getClass().getSimpleName() + ": " + e.getMessage());
-      e.printStackTrace();
     }
+    DocxGenerator generator = new DocxGenerator(inFile, effectiveOutFile, templateDoc);
+    XmlObject xml = XmlObject.Factory.parse(inFile);
+
+    generator.generate(xml);
+    log.info("DOCX file generated.");
   }
 
   /**
@@ -337,7 +314,7 @@ public class MakeDocx {
    * @param outDir Directory to write *.docx files to
    * @param templateDoc Template DOCX document used when constructing new document
    */
-  public static void handleDirectory(File inDir, File outDir, XWPFDocument templateDoc) {
+  public static void handleDirectory(File inDir, File outDir, XWPFDocument templateDoc) throws Exception {
 
     FilenameFilter filter = new SuffixFileFilter(".swpx");
     File[] files = inDir.listFiles(filter);
@@ -402,5 +379,13 @@ public class MakeDocx {
     options.addOption(catalog);
 
     return options;
+  }
+
+  private static void silentlyClose(XWPFDocument doc) {
+    try {
+      doc.close();
+    } catch (IOException e) {
+      // Don't care about this should it ever happen.
+    }
   }
 }
