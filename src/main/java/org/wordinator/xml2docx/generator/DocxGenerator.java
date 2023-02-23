@@ -124,9 +124,9 @@ public class DocxGenerator {
   private static String NS_MATHML = "http://www.w3.org/1998/Math/MathML";
 
   int imageCounter = 0; // Used to keep track of count of images created.
-  
+
   private static SimpleDateFormat isoDateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX", Locale.ENGLISH);
-  
+
 
   /**
    * Holds a set of table border styles
@@ -498,7 +498,7 @@ public class DocxGenerator {
    * @param xml <document-properties> element
    */
   private void handleDocumentProperties(
-		  XWPFDocument doc, 
+		  XWPFDocument doc,
 		  XmlObject xml) {
 	  XmlCursor cursor = xml.newCursor();
 	  cursor.push();
@@ -514,7 +514,7 @@ public class DocxGenerator {
 	  if (cursor.toChild(DocxConstants.QNAME_CUSTOM_PROPERTIES_ELEM)) {
 		  handleCustomProperties(doc, cursor.getObject());
 	  }
-	  
+
   }
 
 /**
@@ -527,7 +527,7 @@ private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
 	// 2022-12-18T18:05:00Z
 	POIXMLProperties properties = doc.getProperties();
 	CoreProperties coreProperties = properties.getCoreProperties();
-	XmlCursor cursor = xml.newCursor();	
+	XmlCursor cursor = xml.newCursor();
 	if (cursor.toFirstChild()) {
 		do {
 			String tagName = cursor.getName().getLocalPart();
@@ -537,7 +537,7 @@ private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
 			} else if ("contentStatus".equals(tagName)) {
 				coreProperties.setContentStatus(value);
 			} else if ("created".equals(tagName)) {
-				try {					
+				try {
 					Date date = isoDateFormatter.parse(value);
 					Optional<Date> opional = Optional.of(date);
 					coreProperties.setCreated(opional);
@@ -557,21 +557,21 @@ private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
 			} else if ("lastModifiedBy".equals(tagName)) {
 				coreProperties.setLastModifiedByUser(value);
 			} else if ("lastPrinted".equals(tagName)) {
-				try {					
+				try {
 					Date date = isoDateFormatter.parse(value);
 					Optional<Date> opional = Optional.of(date);
 					coreProperties.setLastPrinted(opional);
 				} catch (Exception e) {
 					log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <lastPrinted> value '" + value + "'");
-				}				
+				}
 			} else if ("modified".equals(tagName)) {
-				try {					
+				try {
 					Date date = isoDateFormatter.parse(value);
 					Optional<Date> opional = Optional.of(date);
 					coreProperties.setModified(opional);
 				} catch (Exception e) {
 					log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <modified> value '" + value + "'");
-				}				
+				}
 			} else if ("revision".equals(tagName)) {
 				coreProperties.setRevision(value);
 			} else if ("subject".equals(tagName)) {
@@ -584,7 +584,7 @@ private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
 				log.warn("handleCoreProperties(): Unexpected element '" + tagName + "' in <core-properties>. Ignored.");
 			}
 		} while (cursor.toNextSibling());
-	}	
+	}
 }
 
 /**
@@ -595,8 +595,8 @@ private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
 private void handleExtendedProperties(XWPFDocument doc, XmlObject xml) {
 	POIXMLProperties properties = doc.getProperties();
 	ExtendedProperties extendedProperties = properties.getExtendedProperties();
-	XmlCursor cursor = xml.newCursor();	
-	
+	XmlCursor cursor = xml.newCursor();
+
 	if (cursor.toFirstChild()) {
 		do {
 			String tagName = cursor.getName().getLocalPart();
@@ -709,14 +709,14 @@ private void handleExtendedProperties(XWPFDocument doc, XmlObject xml) {
 				}
 			}
 		} while (cursor.toNextSibling());
-	}	
+	}
 }
 
 private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	POIXMLProperties properties = doc.getProperties();
 	CustomProperties customProperties = properties.getCustomProperties();
-	
-	XmlCursor cursor = xml.newCursor();	
+
+	XmlCursor cursor = xml.newCursor();
 	if (cursor.toFirstChild()) {
 		do {
 			String tagName = cursor.getName().getLocalPart();
@@ -724,7 +724,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 			String propName = cursor.getAttributeText(DocxConstants.QNAME_NAME_ATT);
 			if (propName == null || "".equals(propName)) {
 				log.warn("handleCustomProperties(): No value for required @name attribute on <" + tagName + "> element with value '" + value + "'");
-				continue;				
+				continue;
 			}
 			customProperties.addProperty(propName, value);
 		} while (cursor.toNextSibling());
@@ -941,13 +941,13 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
     // Levels to include
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_L_ATT);
-    if (null != attValue) {     
+    if (null != attValue) {
       tocOptions += " \\l \"" + attValue + "\"";
     }
 
     // Turn off page numbers
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_N_ATT);
-    if (null != attValue) {     
+    if (null != attValue) {
       tocOptions += " \\n";
       if ("none".equalsIgnoreCase(attValue)) {
         // No additional parameter
@@ -996,7 +996,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\u";
       }
     }
-    
+
     // Preserves tab entries within table entries.
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_W_ATT);
     if (null != attValue) {
@@ -1006,7 +1006,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\w";
       }
     }
-    
+
     // Preserves newline characters within table entries.
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_X_ATT);
     if (null != attValue) {
@@ -1016,7 +1016,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\x";
       }
     }
-    
+
     // Hides tab leader and page numbers in web page view (§17.18.102).
     // Default is "true" per the SWPX grammar
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_Z_ATT);
@@ -1027,7 +1027,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
     }
 
     ctText.setStringValue("TOC " + tocOptions);
-    
+
   }
 
   private void makeParagraphStyle(XWPFDocument doc, String styleId, String string) {
@@ -3301,15 +3301,15 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
             } else if (cursor.getName().equals(DocxConstants.QNAME_TABLE_ELEM)) {
               // record how many tables were in the cell previously
               int preTables = cell.getCTTc().getTblList().size();
-  
+
               CTTbl ctTbl = cell.getCTTc().addNewTbl();
               ctTbl = cell.getCTTc().addNewTbl();
               CTTblPr tblPr = ctTbl.addNewTblPr();
               tblPr.addNewTblW();
-  
+
               XWPFTable nestedTable = new XWPFTable(ctTbl, cell);
               makeTable(nestedTable, cursor.getObject());
-  
+
               // for some reason this inserts two tables, where the
               // first one is empty. we need to remove that one.
               // luckily, the number of tables we used to have equals
@@ -3318,7 +3318,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
             } else {
               log.warn("Table cell contains unknown element {} -- skipping", cursor.getName());
             }
-  
+
             hasMore = cursor.toNextSibling();
           }
         }

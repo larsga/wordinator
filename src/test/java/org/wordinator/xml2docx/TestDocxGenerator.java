@@ -52,7 +52,7 @@ import junit.framework.TestCase;
 public class TestDocxGenerator extends TestCase {
 
   public static final String DOTX_TEMPLATE_PATH = "docx/Test_Template.dotx";
-  
+
   static final SimpleDateFormat isoDateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX", Locale.ENGLISH);
 
   @Test
@@ -272,7 +272,7 @@ public class TestDocxGenerator extends TestCase {
     run = runIterator.next(); // Should be the hyperlink
     assertTrue("Expected a XWPFHyperlinkRun", run instanceof XWPFHyperlinkRun);
     assertTrue("Expected run following the hyperlink", runIterator.hasNext());
-    run = runIterator.next(); 
+    run = runIterator.next();
     assertEquals("Run after the hyperlink.", ((XWPFRun)run).getText(0));
     // Now look for external link:
     p = iterator.next();
@@ -290,7 +290,7 @@ public class TestDocxGenerator extends TestCase {
     XWPFHyperlinkRun linkRun = (XWPFHyperlinkRun)run;
     String rId = linkRun.getHyperlinkId();
     assertNotNull("Expected and rId", rId);
-    
+
   }
 
   @Test
@@ -487,89 +487,89 @@ public class TestDocxGenerator extends TestCase {
     XWPFDocument doc = convert("simplewp/simplewpml-issue-140-document-properties.swpx", "out/simplewpml-issue-140-document-properties.docx");
     POIXMLProperties properties = doc.getProperties();
     assertNotNull("Expected a POIXMLProperties object", properties);
-    
+
     // Core properties:
-    
+
     CoreProperties coreProperties = properties.getCoreProperties();
     assertNotNull("Expected a CoreProperties object", coreProperties);
 
     String value = null;
     String expected = null;
-    
+
     value = coreProperties.getCategory();
     expected = "test doc";
     assertNotNull("Expected a value for 'category' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = coreProperties.getContentStatus();
     expected = "draft";
     assertNotNull("Expected a value for 'contentStatus' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     Date dateValue = coreProperties.getCreated();
     Date expectedDate = isoDateFormatter.parse("2024-04-20T10:11:12Z");
     assertNotNull("Expected a value for 'created' property", dateValue);
     assertEquals("Expected \"" + expectedDate + "\", got \"" + dateValue + "\"", expectedDate, dateValue);
-    
+
     value = coreProperties.getCreator();
     expected = "Tester McTesterson";
     assertNotNull("Expected a value for 'creator' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = coreProperties.getDescription();
     expected = "A test of document properties";
     assertNotNull("Expected a value for 'description' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = coreProperties.getIdentifier();
     expected = "issue-140-test";
     assertNotNull("Expected a value for 'identifier' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = coreProperties.getKeywords();
     expected = "docprops testing";
     assertNotNull("Expected a value for 'keywords' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     // NOTE: There is no getLanguage() method on CoreProperties
-    
+
     value = coreProperties.getLastModifiedByUser();
     expected = "Tester Jr.";
     assertNotNull("Expected a value for 'lastModifiedBy' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     dateValue = coreProperties.getLastPrinted();
     expectedDate = isoDateFormatter.parse("2024-04-21T10:11:12Z");
     assertNotNull("Expected a value for 'lastPrinted' property", dateValue);
     assertEquals("Expected \"" + expectedDate + "\", got \"" + dateValue + "\"", expectedDate, dateValue);
-    
+
     dateValue = coreProperties.getModified();
     expectedDate = isoDateFormatter.parse("2024-04-21T10:10:12Z");
     assertNotNull("Expected a value for 'modified' property", dateValue);
     assertEquals("Expected \"" + expectedDate + "\", got \"" + dateValue + "\"", expectedDate, dateValue);
-    
+
     value = coreProperties.getRevision();
     expected = "2";
     assertNotNull("Expected a value for 'revision' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = coreProperties.getSubject();
     expected = "subject value";
     assertNotNull("Expected a value for 'subject' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = coreProperties.getTitle();
     expected = "Issue 140 Test of document properties";
     assertNotNull("Expected a value for 'title' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = coreProperties.getVersion();
     expected = "1";
     assertNotNull("Expected a value for 'version' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     // Test extended properties:
-    
+
     ExtendedProperties extendedProperties = properties.getExtendedProperties();
     assertNotNull("Expected an ExtendedProperties object", extendedProperties);
 
@@ -577,94 +577,94 @@ public class TestDocxGenerator extends TestCase {
     expected = "Wordinator";
     assertNotNull("Expected a value for 'Application' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = extendedProperties.getAppVersion();
     expected = "11.2345";
     assertNotNull("Expected a value for 'AppVersion' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     int intValue = extendedProperties.getCharacters();
     int intExpected = 345;
     assertNotNull("Expected a value for 'Characters' property", intValue);
     assertEquals("Expected \"" + intExpected + "\", got \"" + intValue + "\"", intExpected, intValue);
-        
+
     intValue = extendedProperties.getCharactersWithSpaces();
     intExpected = 1234;
     assertNotNull("Expected a value for 'CharactersWithSpaces' property", intValue);
     assertEquals("Expected \"" + intExpected + "\", got \"" + intValue + "\"", intExpected, intValue);
-        
+
     value = extendedProperties.getCompany();
     expected = "Planet-Sized Brains";
     assertNotNull("Expected a value for 'Company' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     intValue = extendedProperties.getHiddenSlides();
     intExpected = 0;
     assertNotNull("Expected a value for 'HiddeSlides' property", intValue);
     assertEquals("Expected \"" + intExpected + "\", got \"" + intValue + "\"", intExpected, intValue);
-            
+
     value = extendedProperties.getHyperlinkBase();
     expected = "https://url-base-value";
     assertNotNull("Expected a value for 'HyperlinkBase' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     intValue = extendedProperties.getLines();
     intExpected = 156;
     assertNotNull("Expected a value for 'Lines' property", intValue);
     assertEquals("Expected \"" + intExpected + "\", got \"" + intValue + "\"", intExpected, intValue);
-                        
+
     value = extendedProperties.getManager();
     expected = "Ima In Charge";
     assertNotNull("Expected a value for 'Manager' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     intValue = extendedProperties.getMMClips();
     intExpected = 1;
     assertNotNull("Expected a value for 'MMClips' property", intValue);
     assertEquals("Expected \"" + intExpected + "\", got \"" + intValue + "\"", intExpected, intValue);
-            
+
     intValue = extendedProperties.getNotes();
     intExpected = 4;
     assertNotNull("Expected a value for 'Notes' property", intValue);
     assertEquals("Expected \"" + intExpected + "\", got \"" + intValue + "\"", intExpected, intValue);
-            
+
     value = extendedProperties.getPresentationFormat();
     expected = "PDF";
     assertNotNull("Expected a value for 'PresentationFormat' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     value = extendedProperties.getTemplate();
     expected = "the-template-name";
     assertNotNull("Expected a value for 'Template' property", value);
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     // Test custom properties:
-    
+
     CustomProperties customProperties = properties.getCustomProperties();
     assertNotNull("Expected a CustomProperties object", customProperties);
-    
+
     // There doesn't seem to be a method to directly query the set of defined
     // properties.
     CTProperty[] props = customProperties.getUnderlyingProperties().getPropertyArray();
     assertEquals("Expected 2 properties, got " + props.length, props.length, 2);
-    
+
     for (int i = 0; i < props.length; i++) {
 		CTProperty prop = props[i];
 		assertNotNull("Expected a CTProperty object for property", prop);
     }
-    
+
     String propName = "prop-1";
     value = props[0].getLpwstr();
     expected = "value 01";
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
     propName = "prop 2";
     CTProperty prop = customProperties.getProperty(propName);
     assertNotNull("Expected a CTProperty object for property '" + propName + "'", prop);
     value = prop.getLpwstr();
     expected = "value 02";
     assertEquals("Expected \"" + expected + "\", got \"" + value + "\"", expected, value);
-    
+
   }
 
   public void testImageFromUrl() throws Exception {
@@ -736,7 +736,7 @@ public class TestDocxGenerator extends TestCase {
     List<IBodyElement> contents = doc.getBodyElements();
     int i = contents.size() - 2; // 2nd to last paragraph should have keepNext
     XWPFParagraph p = (XWPFParagraph)contents.get(i);
-    
+
     // Check that the keepNext property is set.
     CTOnOff onOff = p.getCTPPr().getKeepNext();
     assertNotNull("Expected a value for keepNext", onOff);
@@ -751,12 +751,38 @@ public class TestDocxGenerator extends TestCase {
     List<IBodyElement> contents = doc.getBodyElements();
     int i = contents.size() - 2; // 2nd to last paragraph should have keepLines
     XWPFParagraph p = (XWPFParagraph)contents.get(i);
-    
+
     // Check that the keepNext property is set.
     CTOnOff onOff = p.getCTPPr().getKeepLines();
     assertNotNull("Expected a value for keepLines", onOff);
     String value = (String)onOff.getVal();
     assertEquals("Expected on", value, "on");
+  }
+
+  @Test
+  public void testTableEmptyCell() throws Exception {
+    XWPFDocument doc = convert("simplewp/simplewpml-table-empty-cell.swpx", "out/table-empty-cell.docx");
+
+    List<IBodyElement> contents = doc.getBodyElements();
+    assertEquals(1, contents.size());
+
+    Iterator<IBodyElement> it = contents.iterator();
+    IBodyElement elem = it.next();
+    assertEquals(BodyElementType.TABLE, elem.getElementType());
+
+    XWPFTable t = (XWPFTable) elem;
+    assertEquals(1, t.getNumberOfRows());
+
+    XWPFTableRow row = t.getRow(0);
+    assertEquals(2, row.getTableCells().size());
+
+    XWPFTableCell cell = row.getCell(0);
+    contents = cell.getBodyElements();
+    assertEquals(1, contents.size());
+
+    cell = row.getCell(1); // the empty cell
+    contents = cell.getBodyElements();
+    assertEquals(1, contents.size()); // used to fail with 0
   }
 
   // ===== INTERNAL UTILITIES
