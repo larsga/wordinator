@@ -3273,8 +3273,6 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
           ctTcPr.setVMerge(CTVMerge.Factory.newInstance());
         }
       } else {
-        boolean hasMore = cursor.toFirstChild();
-
         // Apache POI always puts in an empty paragraph, but we don't
         // yet know if we want it
         cell.removeParagraph(0);
@@ -3284,6 +3282,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         boolean lastIsParagraph = false;
 
         // convert the contents of the cell
+        boolean hasMore = cursor.toFirstChild();
         while (hasMore) {
           if (cursor.getName().equals(DocxConstants.QNAME_P_ELEM)) {
             lastIsParagraph = true;
