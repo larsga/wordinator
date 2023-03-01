@@ -3273,6 +3273,14 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
           ctTcPr.setVMerge(CTVMerge.Factory.newInstance());
         }
       } else {
+        // Apache POI puts in an empty paragraph at the start, but we
+        // don't want it
+        cell.removeParagraph(0);
+
+        // the cell has to *end* with a paragraph, so if the last one wasn't
+        // a paragraph we need to add one at the end
+        boolean lastIsParagraph = false;
+
         // convert the contents of the cell
         boolean hasMore = cursor.toFirstChild();
         // Issue 134: If <td> is empty, hasMore will be false.
@@ -3318,9 +3326,18 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
             } else {
               log.warn("Table cell contains unknown element {} -- skipping", cursor.getName());
             }
+          } else if (cursor.getName().equals(DocxConstants.QNAME_TABLE_ELEM)) {
+            lastIsParagraph = false;
+
+            // record how many tables were in the cell previously
+            int preTables = cell.getCTTc().getTblList().size();
 
             hasMore = cursor.toNextSibling();
           }
+        }
+
+        if (!lastIsParagraph) {
+          cell.addParagraph();
         }
       }
       cursor.pop();
