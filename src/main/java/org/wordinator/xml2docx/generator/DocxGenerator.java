@@ -545,7 +545,9 @@ public class DocxGenerator {
 
     if (cursor.toChild(new QName(DocxConstants.SIMPLE_WP_NS, "tocentry"))) {
       int tocLevel = 1;
-      handleTocEntry(doc, cursor, tocLevel);
+      do {
+    	  handleTocEntry(doc, cursor, tocLevel);
+      } while (cursor.toNextSibling());
     }
     cursor.pop();
     para = doc.createParagraph();
@@ -1816,7 +1818,12 @@ public class DocxGenerator {
   private void makeBookmarkStart(XWPFParagraph para, XmlCursor cursor) throws DocxGenerationException
   {
     CTBookmark bookmark = para.getCTP().addNewBookmarkStart();
-    bookmark.setName(cursor.getAttributeText(DocxConstants.QNAME_NAME_ATT));
+    String nameValue = cursor.getAttributeText(DocxConstants.QNAME_NAME_ATT);
+    String idValue = cursor.getAttributeText(DocxConstants.QNAME_ID_ATT);
+    if (null == nameValue || "".equals(nameValue.trim())) {
+    	nameValue = idValue;
+    }
+    bookmark.setName(nameValue);
     BigInteger id = nextId();
     bookmark.setId(id);
     this.bookmarkIdToIdMap.put(cursor.getAttributeText(DocxConstants.QNAME_ID_ATT), id);
