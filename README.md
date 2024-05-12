@@ -32,6 +32,7 @@ If you need to go from Word documents back to XML, you may find [the DITA for Pu
   * Support generation of MathML equations in Word. Thanks to Lars Marius Garshol for contributing this enhancment. This adds the MathML 2 and 3 RNG grammars (courtesy of Ken Holman) for use with the SWPX grammar. For validation, use the simplewpml-mathml3.rng or -mathml2.rng files as the top-level grammar. Requires that you get the MATHML2OOML.XSL from a Microsoft Office distribution if you want to use XSLT to convert MathML into OOXML.
   * Various test case refinements
   * Issue 82: Handle specified-but-empty @height and @width attribute
+  * Implement support for document properties (core, extendeded, custom).
 
 * 1.1.2
   * Reworked release package to put dependency jars in lib/ dir and use non-all-dependencies jar to avoid issue with log4j multi-version jar not working right.
