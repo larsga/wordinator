@@ -1,6 +1,3 @@
-/**
- *
- */
 package org.wordinator.xml2docx.generator;
 
 import java.awt.image.BufferedImage;
@@ -127,9 +124,9 @@ public class DocxGenerator {
   private static String NS_MATHML = "http://www.w3.org/1998/Math/MathML";
 
   int imageCounter = 0; // Used to keep track of count of images created.
-  
+
   private static SimpleDateFormat isoDateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX", Locale.ENGLISH);
-  
+
 
   /**
    * Holds a set of table border styles
@@ -567,7 +564,7 @@ public class DocxGenerator {
    * @param xml <document-properties> element
    */
   private void handleDocumentProperties(
-		  XWPFDocument doc, 
+		  XWPFDocument doc,
 		  XmlObject xml) {
 	  XmlCursor cursor = xml.newCursor();
 	  cursor.push();
@@ -583,78 +580,78 @@ public class DocxGenerator {
 	  if (cursor.toChild(DocxConstants.QNAME_CUSTOM_PROPERTIES_ELEM)) {
 		  handleCustomProperties(doc, cursor.getObject());
 	  }
-	  
+
   }
 
-/**
- * Set core properties from the <core-properties> element.
- * @param doc XWPF document to set the properties on
- * @param xml <core-properties> element.
- */
-private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
-	// DateTime properties have ISO times like:
-	// 2022-12-18T18:05:00Z
-	POIXMLProperties properties = doc.getProperties();
-	CoreProperties coreProperties = properties.getCoreProperties();
-	XmlCursor cursor = xml.newCursor();	
-	if (cursor.toFirstChild()) {
-		do {
-			String tagName = cursor.getName().getLocalPart();
-			String value = cursor.getTextValue();
-			if ("category".equals(tagName)) {
-				coreProperties.setCategory(value);
-			} else if ("contentStatus".equals(tagName)) {
-				coreProperties.setContentStatus(value);
-			} else if ("created".equals(tagName)) {
-				try {					
-					Date date = isoDateFormatter.parse(value);
-					Optional<Date> opional = Optional.of(date);
-					coreProperties.setCreated(opional);
-				} catch (Exception e) {
-					log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <created> value '" + value + "'");
-				}
-			} else if ("creator".equals(tagName)) {
-				coreProperties.setCreator(value);
-			} else if ("description".equals(tagName)) {
-				coreProperties.setDescription(value);
-			} else if ("identifier".equals(tagName)) {
-				coreProperties.setIdentifier(value);
-			} else if ("keywords".equals(tagName)) {
-				coreProperties.setKeywords(value);
-			} else if ("language".equals(tagName)) {
-				// There doesn't see to be a setLanguage() method on CoreProperties
-			} else if ("lastModifiedBy".equals(tagName)) {
-				coreProperties.setLastModifiedByUser(value);
-			} else if ("lastPrinted".equals(tagName)) {
-				try {					
-					Date date = isoDateFormatter.parse(value);
-					Optional<Date> opional = Optional.of(date);
-					coreProperties.setLastPrinted(opional);
-				} catch (Exception e) {
-					log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <lastPrinted> value '" + value + "'");
-				}				
-			} else if ("modified".equals(tagName)) {
-				try {					
-					Date date = isoDateFormatter.parse(value);
-					Optional<Date> opional = Optional.of(date);
-					coreProperties.setModified(opional);
-				} catch (Exception e) {
-					log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <modified> value '" + value + "'");
-				}				
-			} else if ("revision".equals(tagName)) {
-				coreProperties.setRevision(value);
-			} else if ("subject".equals(tagName)) {
-				coreProperties.setSubjectProperty(value);
-			} else if ("title".equals(tagName)) {
-				coreProperties.setTitle(value);
-			} else if ("version".equals(tagName)) {
-				coreProperties.setVersion(value);
-			} else {
-				log.warn("handleCoreProperties(): Unexpected element '" + tagName + "' in <core-properties>. Ignored.");
-			}
-		} while (cursor.toNextSibling());
-	}	
-}
+  /**
+   * Set core properties from the <core-properties> element.
+   * @param doc XWPF document to set the properties on
+   * @param xml <core-properties> element.
+   */
+  private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
+    // DateTime properties have ISO times like:
+    // 2022-12-18T18:05:00Z
+    POIXMLProperties properties = doc.getProperties();
+    CoreProperties coreProperties = properties.getCoreProperties();
+    XmlCursor cursor = xml.newCursor();
+    if (cursor.toFirstChild()) {
+      do {
+        String tagName = cursor.getName().getLocalPart();
+        String value = cursor.getTextValue();
+        if ("category".equals(tagName)) {
+          coreProperties.setCategory(value);
+        } else if ("contentStatus".equals(tagName)) {
+          coreProperties.setContentStatus(value);
+        } else if ("created".equals(tagName)) {
+          try {
+            Date date = isoDateFormatter.parse(value);
+            Optional<Date> opional = Optional.of(date);
+            coreProperties.setCreated(opional);
+          } catch (Exception e) {
+            log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <created> value '" + value + "'");
+          }
+        } else if ("creator".equals(tagName)) {
+          coreProperties.setCreator(value);
+        } else if ("description".equals(tagName)) {
+          coreProperties.setDescription(value);
+        } else if ("identifier".equals(tagName)) {
+          coreProperties.setIdentifier(value);
+        } else if ("keywords".equals(tagName)) {
+          coreProperties.setKeywords(value);
+        } else if ("language".equals(tagName)) {
+          // There doesn't see to be a setLanguage() method on CoreProperties
+        } else if ("lastModifiedBy".equals(tagName)) {
+          coreProperties.setLastModifiedByUser(value);
+        } else if ("lastPrinted".equals(tagName)) {
+          try {
+            Date date = isoDateFormatter.parse(value);
+            Optional<Date> opional = Optional.of(date);
+            coreProperties.setLastPrinted(opional);
+          } catch (Exception e) {
+            log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <lastPrinted> value '" + value + "'");
+          }
+        } else if ("modified".equals(tagName)) {
+          try {
+            Date date = isoDateFormatter.parse(value);
+            Optional<Date> opional = Optional.of(date);
+            coreProperties.setModified(opional);
+          } catch (Exception e) {
+            log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <modified> value '" + value + "'");
+          }
+        } else if ("revision".equals(tagName)) {
+          coreProperties.setRevision(value);
+        } else if ("subject".equals(tagName)) {
+          coreProperties.setSubjectProperty(value);
+        } else if ("title".equals(tagName)) {
+          coreProperties.setTitle(value);
+        } else if ("version".equals(tagName)) {
+          coreProperties.setVersion(value);
+        } else {
+          log.warn("handleCoreProperties(): Unexpected element '" + tagName + "' in <core-properties>. Ignored.");
+        }
+      } while (cursor.toNextSibling());
+    }
+  }
 
 /**
  * Handle the <extended-properties> element.
@@ -664,8 +661,8 @@ private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
 private void handleExtendedProperties(XWPFDocument doc, XmlObject xml) {
 	POIXMLProperties properties = doc.getProperties();
 	ExtendedProperties extendedProperties = properties.getExtendedProperties();
-	XmlCursor cursor = xml.newCursor();	
-	
+	XmlCursor cursor = xml.newCursor();
+
 	if (cursor.toFirstChild()) {
 		do {
 			String tagName = cursor.getName().getLocalPart();
@@ -778,14 +775,14 @@ private void handleExtendedProperties(XWPFDocument doc, XmlObject xml) {
 				}
 			}
 		} while (cursor.toNextSibling());
-	}	
+	}
 }
 
 private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	POIXMLProperties properties = doc.getProperties();
 	CustomProperties customProperties = properties.getCustomProperties();
-	
-	XmlCursor cursor = xml.newCursor();	
+
+	XmlCursor cursor = xml.newCursor();
 	if (cursor.toFirstChild()) {
 		do {
 			String tagName = cursor.getName().getLocalPart();
@@ -793,7 +790,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 			String propName = cursor.getAttributeText(DocxConstants.QNAME_NAME_ATT);
 			if (propName == null || "".equals(propName)) {
 				log.warn("handleCustomProperties(): No value for required @name attribute on <" + tagName + "> element with value '" + value + "'");
-				continue;				
+				continue;
 			}
 			customProperties.addProperty(propName, value);
 		} while (cursor.toNextSibling());
@@ -1010,13 +1007,13 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
     // Levels to include
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_L_ATT);
-    if (null != attValue) {     
+    if (null != attValue) {
       tocOptions += " \\l \"" + attValue + "\"";
     }
 
     // Turn off page numbers
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_N_ATT);
-    if (null != attValue) {     
+    if (null != attValue) {
       tocOptions += " \\n";
       if ("none".equalsIgnoreCase(attValue)) {
         // No additional parameter
@@ -1065,7 +1062,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\u";
       }
     }
-    
+
     // Preserves tab entries within table entries.
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_W_ATT);
     if (null != attValue) {
@@ -1075,7 +1072,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\w";
       }
     }
-    
+
     // Preserves newline characters within table entries.
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_X_ATT);
     if (null != attValue) {
@@ -1085,7 +1082,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\x";
       }
     }
-    
+
     // Hides tab leader and page numbers in web page view (§17.18.102).
     // Default is "true" per the SWPX grammar
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_Z_ATT);
@@ -1096,7 +1093,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
     }
 
     ctText.setStringValue("TOC " + tocOptions);
-    
+
   }
 
   private void makeParagraphStyle(XWPFDocument doc, String styleId, String string) {
@@ -2694,10 +2691,11 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
    */
   private void makeTable(XWPFTable table, XmlObject xml) throws DocxGenerationException {
 
-    // If the column widths are absolute measurements they can be set on the grid,
-    // but if they are proportional, then they have to be set on at least the first
-    // row's cells. The table grid is not required (it always reflects the calculated
-    // width of the columns, possibly determined by applying percentage table and
+    // If the column widths are absolute measurements they can be set
+    // on the grid, but if they are proportional, then they have to be
+    // set on at least the first row's cells. The table grid is not
+    // required (it always reflects the calculated width of the
+    // columns, possibly determined by applying percentage table and
     // column widths.
     XmlCursor cursor = xml.newCursor();
 
@@ -2932,14 +2930,12 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
     String frameValue = cursor.getAttributeText(DocxConstants.QNAME_FRAME_ATT);
 
-    TableBorderStyles borderStyles =
-        new TableBorderStyles(cursor.getObject());
+    TableBorderStyles borderStyles = new TableBorderStyles(cursor.getObject());
 
     XWPFBorderType topBorder = borderStyles.getTopBorder();
     XWPFBorderType bottomBorder = borderStyles.getBottomBorder();
     XWPFBorderType leftBorder = borderStyles.getLeftBorder();
     XWPFBorderType rightBorder = borderStyles.getRightBorder();
-
 
     if (frameValue != null) {
       if ("none".equals(frameValue)) {
@@ -2973,6 +2969,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         leftBorder = XWPFBorderType.NONE;
         rightBorder = XWPFBorderType.NONE;
       }
+    }
 
     }
     if (bottomBorder != null) {
@@ -3366,7 +3363,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         // Issue 134: If <td> is empty, hasMore will be false.
         if (!hasMore) {
           // Leave the empty paragraph, which is required by Word.
-          
+
         } else {
 			// Cells always have at least one paragraph.
 			cell.removeParagraph(0);
@@ -3374,7 +3371,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	        // the cell has to *end* with a paragraph, so if the last block isn't
 	        // a paragraph we need to add one at the end.  using this to track
 	        boolean lastIsParagraph = false;
-	
+
 	        // convert the contents of the cell
 	          while (hasMore) {
 	            if (cursor.getName().equals(DocxConstants.QNAME_P_ELEM)) {
@@ -3395,7 +3392,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	              }
 	            } else if (cursor.getName().equals(DocxConstants.QNAME_TABLE_ELEM)) {
 	            lastIsParagraph = false;
-	
+
 	              // record how many tables were in the cell previously
 	              int preTables = cell.getCTTc().getTblList().size();
 
@@ -3413,10 +3410,10 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	            } else {
 	              log.warn("Table cell contains unknown element {} -- skipping", cursor.getName());
 	            }
-	  
+
 	            hasMore = cursor.toNextSibling();
 	          }
-	
+
 	        // cell didn't end in a paragraph, so need to add one
 	        if (!lastIsParagraph) {
 	          cell.addParagraph();
