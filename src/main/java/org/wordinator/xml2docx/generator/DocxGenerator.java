@@ -2924,7 +2924,6 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
   }
 
   private TableBorderStyles setTableFrame(XWPFTable table, XmlCursor cursor) {
-    int frameWidth = 8; // 1pt
     int frameSpace = 0;
     String frameColor = "auto";
 
@@ -2971,20 +2970,42 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
       }
     }
 
+    int bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_BOTTOM_ATT, cursor);
+    if (bottomBorder != null || bwidth != -1) {
+      table.setBottomBorder(bottomBorder, bwidth, frameSpace, frameColor);
     }
-    if (bottomBorder != null) {
-      table.setBottomBorder(bottomBorder, frameWidth, frameSpace, frameColor);
+
+    bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_TOP_ATT, cursor);
+    if (topBorder != null || bwidth != -1) {
+      table.setTopBorder(topBorder, bwidth, frameSpace, frameColor);
     }
-    if (topBorder != null) {
-      table.setTopBorder(topBorder, frameWidth, frameSpace, frameColor);
+
+    bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_LEFT_ATT, cursor);
+    if (leftBorder != null || bwidth != -1) {
+      log.warn("Left border width: " + bwidth);
+      table.setLeftBorder(leftBorder, bwidth, frameSpace, frameColor);
     }
-    if (leftBorder != null) {
-      table.setLeftBorder(leftBorder, frameWidth, frameSpace, frameColor);
-    }
-    if (rightBorder != null) {
-      table.setRightBorder(rightBorder, frameWidth, frameSpace, frameColor);
+
+    bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_RIGHT_ATT, cursor);
+    if (rightBorder != null || bwidth != -1) {
+      table.setRightBorder(rightBorder, bwidth, frameSpace, frameColor);
     }
     return borderStyles;
+  }
+
+  private int getBorderWidth(QName attribute, XmlCursor cursor) {
+    String width = cursor.getAttributeText(attribute);
+    if (width == null) {
+      return -1;
+    }
+
+    // border width is given in 1/8th of a point
+    try {
+      return (int) Math.round(Measurement.toPoints(width, dotsPerInch) * 8);
+    } catch (MeasurementException e) {
+      log.warn("getMeasurementValue(): " + e.getClass().getSimpleName() + " - " + e.getMessage(), e);
+      return -1;
+    }
   }
 
   /**
