@@ -1342,39 +1342,8 @@
           </choice>
         </attribute>
       </optional>
-      <optional>
-        <attribute name="borderWidthTop">
-          <a:documentation>
-            <p>Specifies the thickness of the top table border</p>
-          </a:documentation>
-          <ref name="measurement"/>
-        </attribute>
-      </optional>
-      <optional>
-        <attribute name="borderWidthLeft">
-          <a:documentation>
-            <p>Specifies the thickness of the left table border</p>
-          </a:documentation>
-          <ref name="measurement"/>
-        </attribute>
-      </optional>
-      <optional>
-        <attribute name="borderWidthRight">
-          <a:documentation>
-            <p>Specifies the thickness of the right table border</p>
-          </a:documentation>
-          <ref name="measurement"/>
-        </attribute>
-      </optional>
-      <optional>
-        <attribute name="borderWidthBottom">
-          <a:documentation>
-            <p>Specifies the thickness of the bottom table border</p>
-          </a:documentation>
-          <ref name="measurement"/>
-        </attribute>
-      </optional>
 
+      <ref name="border-widths"/>
       <ref name="style-atts"/>
     </element>
   </define>
@@ -1616,7 +1585,43 @@
           </a:documentation>
         </attribute>
       </optional>
+      <ref name="border-widths"/>
     </element>
+  </define>
+
+  <define name="border-widths">
+    <optional>
+      <attribute name="borderWidthTop">
+        <a:documentation>
+          <p>Specifies the thickness of the top table border</p>
+        </a:documentation>
+        <ref name="measurement"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="borderWidthLeft">
+        <a:documentation>
+          <p>Specifies the thickness of the left table border</p>
+        </a:documentation>
+        <ref name="measurement"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="borderWidthRight">
+        <a:documentation>
+          <p>Specifies the thickness of the right table border</p>
+        </a:documentation>
+        <ref name="measurement"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="borderWidthBottom">
+        <a:documentation>
+          <p>Specifies the thickness of the bottom table border</p>
+        </a:documentation>
+        <ref name="measurement"/>
+      </attribute>
+    </optional>
   </define>
 
   <define name="object">
