@@ -57,12 +57,12 @@ arbitrary XML, JSON, etc.</description>
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi</artifactId>
-      <version>5.2.5</version>
+      <version>5.5.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
-      <version>5.2.5</version>
+      <version>5.5.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.xmlbeans</groupId>
@@ -77,7 +77,7 @@ arbitrary XML, JSON, etc.</description>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.15.0</version>
+      <version>2.21.0</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/net.sf.saxon/Saxon-HE -->
     <dependency>
@@ -96,14 +96,14 @@ arbitrary XML, JSON, etc.</description>
   <dependency>
     <groupId>org.apache.logging.log4j</groupId>
     <artifactId>log4j-core</artifactId>
-    <version>2.19.0</version>
+    <version>2.24.3</version>
   </dependency>
 	<!-- https://mvnrepository.com/artifact/xml-resolver/xml-resolver -->
 	<dependency>
 	    <groupId>xml-resolver</groupId>
 	    <artifactId>xml-resolver</artifactId>
 	    <version>1.2</version>
-	</dependency>	
+	</dependency>
   </dependencies>
   <distributionManagement>
     <snapshotRepository>
@@ -145,7 +145,7 @@ arbitrary XML, JSON, etc.</description>
     </profile>
   </profiles>
   <build>
-    <plugins>      
+    <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
@@ -201,8 +201,8 @@ arbitrary XML, JSON, etc.</description>
               <mainClass>org.wordinator.xml2docx.MakeDocx</mainClass>
             </manifest>
             <!-- Make the all-dependencies jar work with log4j multi-version jars
-              
-                 This may require use of the 'shaded' jar plug-in 
+
+                 This may require use of the 'shaded' jar plug-in
             -->
             <manifestEntries>
               <Multi-Release>true</Multi-Release>
@@ -233,7 +233,7 @@ arbitrary XML, JSON, etc.</description>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
         </configuration>
-      </plugin>           
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
