@@ -51,17 +51,21 @@ public final class DocxConstants {
   public static final QName QNAME_BORDER_STYLE_OUTSIDE_ATT = new QName("", "borderstyleoutside");
   public static final QName QNAME_BORDER_STYLE_RIGHT_ATT = new QName("", "borderstyleright");
   public static final QName QNAME_BORDER_STYLE_TOP_ATT = new QName("", "borderstyletop");
-	public static final QName QNAME_BOTTOM_ATT = new QName("", "bottom");
-	public static final QName QNAME_CALCULATEDWIDTH_ATT = new QName("", "calculatedWidth");
+  public static final QName QNAME_BORDER_WIDTH_TOP_ATT = new QName("", "borderWidthTop");
+  public static final QName QNAME_BORDER_WIDTH_LEFT_ATT = new QName("", "borderWidthLeft");
+  public static final QName QNAME_BORDER_WIDTH_RIGHT_ATT = new QName("", "borderWidthRight");
+  public static final QName QNAME_BORDER_WIDTH_BOTTOM_ATT = new QName("", "borderWidthBottom");
+  public static final QName QNAME_BOTTOM_ATT = new QName("", "bottom");
+  public static final QName QNAME_CALCULATEDWIDTH_ATT = new QName("", "calculatedWidth");
   public static final QName QNAME_CALLOUT_ATT = new QName("", "callout");
-	public static final QName QNAME_CAPS_ATT = new QName("", "caps");
+  public static final QName QNAME_CAPS_ATT = new QName("", "caps");
   public static final QName QNAME_CHAPTER_SEPARATOR_ATT = new QName("", "chapter-separator");
   public static final QName QNAME_CHAPTER_STYLE_ATT = new QName("", "chapter-style");
   public static final QName QNAME_CODE_ATT = new QName(SIMPLE_WP_NS, "code");
   public static final QName QNAME_COLOR_ATT = new QName(OO_WPML_NS, "color");
-	public static final QName QNAME_COLSEP_ATT = new QName("", "colsep");
-	public static final QName QNAME_COLSPAN_ATT = new QName("", "colspan");
-	public static final QName QNAME_COLWIDTH_ATT = new QName("", "colwidth");
+  public static final QName QNAME_COLSEP_ATT = new QName("", "colsep");
+  public static final QName QNAME_COLSPAN_ATT = new QName("", "colspan");
+  public static final QName QNAME_COLWIDTH_ATT = new QName("", "colwidth");
   public static final QName QNAME_CUSTOMMARKFOLLOWS_ATT = new QName(OO_WPML_NS, "customMarkFollows");
 	public static final QName QNAME_DOUBLE_STRIKETHROUGH_ATT = new QName("", "double-strikethrough");
 	public static final QName QNAME_EMBOSS_ATT = new QName("", "emboss");
@@ -146,7 +150,7 @@ public final class DocxConstants {
 	public static final QName QNAME_TR_ELEM = new QName(SIMPLE_WP_NS, "tr");
 	public static final QName QNAME_TD_ELEM = new QName(SIMPLE_WP_NS, "td");
 	public static final QName QNAME_VSPAN_ELEM = new QName(SIMPLE_WP_NS, "vspan");
-	
+
 	public static final String PROPERTY_VALUE_CONTINUOUS = "continuous";
   public static final String PROPERTY_PAGEBREAK = "pagebreak";
   public static final QName QNAME_TCPR_ELEM = new QName(OO_WPML_NS, "tcPr");

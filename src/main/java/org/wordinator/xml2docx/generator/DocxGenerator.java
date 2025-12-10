@@ -1,6 +1,3 @@
-/**
- *
- */
 package org.wordinator.xml2docx.generator;
 
 import java.awt.image.BufferedImage;
@@ -45,6 +42,7 @@ import org.apache.poi.xwpf.usermodel.BodyElementType;
 import org.apache.poi.xwpf.usermodel.BreakType;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
+import org.apache.poi.xwpf.usermodel.TableRowAlign;
 import org.apache.poi.xwpf.usermodel.UnderlinePatterns;
 import org.apache.poi.xwpf.usermodel.XWPFAbstractFootnoteEndnote;
 import org.apache.poi.xwpf.usermodel.XWPFAbstractNum;
@@ -126,272 +124,8 @@ public class DocxGenerator {
   private static String NS_MATHML = "http://www.w3.org/1998/Math/MathML";
 
   int imageCounter = 0; // Used to keep track of count of images created.
-  
+
   private static SimpleDateFormat isoDateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX", Locale.ENGLISH);
-  
-
-  /**
-   * Holds a set of table border styles
-   *
-   */
-  protected class TableBorderStyles {
-
-    // Default border type is set by the @borderstyle or @framestyle attribute.
-    // By default there are no explicit borders.
-    XWPFBorderType defaultBorderType = null;
-    XWPFBorderType topBorder = null;
-    XWPFBorderType bottomBorder = null;
-    XWPFBorderType leftBorder = null;
-    XWPFBorderType rightBorder = null;
-    XWPFBorderType rowSepBorder = null;
-    XWPFBorderType colSepBorder = null;
-
-    String defaultColor = null;
-    String topColor = null;
-    String leftColor = null;
-    String bottomColor = null;
-    String rightColor = null;
-
-    public TableBorderStyles(
-        XWPFBorderType defaultBorderType,
-        XWPFBorderType topBorder,
-        XWPFBorderType bottomBorder,
-        XWPFBorderType leftBorder,
-        XWPFBorderType rightBorder) {
-
-    }
-
-    /**
-     * Construct using specified border styles as the initial values.
-     * @param parentBorderStyles Styles to be inherited from parent
-     */
-    public TableBorderStyles(TableBorderStyles parentBorderStyles) {
-      defaultBorderType = parentBorderStyles.getDefaultBorderType();
-      topBorder = parentBorderStyles.getTopBorder();
-      bottomBorder = parentBorderStyles.getBottomBorder();
-      leftBorder = parentBorderStyles.getLeftBorder();
-      rightBorder = parentBorderStyles.getRightBorder();
-      rowSepBorder = parentBorderStyles.getRowSepBorder();
-      colSepBorder = parentBorderStyles.getColSepBorder();
-
-      // Get default border colors from parent?
-    }
-
-    /**
-     * Construct initial border styles from an element that may specify
-     * border frame style attributes.
-     * @param borderStyleSpecifier XML element that may specify frame style attributes (table, td)
-     */
-    public TableBorderStyles(XmlObject borderStyleSpecifier) {
-
-      XmlCursor cursor = borderStyleSpecifier.newCursor();
-      String tagname = cursor.getName().getLocalPart();
-      String styleValue = null;
-      String styleBottomValue= null;
-      String styleTopValue= null;
-      String styleLeftValue= null;
-      String styleRightValue= null;
-
-      String colorValue = null;
-      String colorBottomValue= null;
-      String colorTopValue= null;
-      String colorLeftValue= null;
-      String colorRightValue= null;
-
-      // Issue 30: Also get the border color values.
-
-      if ("table".equals(tagname)) {
-        styleValue = cursor.getAttributeText(DocxConstants.QNAME_FRAMESTYLE_ATT);
-        styleBottomValue= cursor.getAttributeText(DocxConstants.QNAME_FRAMESTYLE_BOTTOM_ATT);
-        styleTopValue= cursor.getAttributeText(DocxConstants.QNAME_FRAMESTYLE_TOP_ATT);
-        styleLeftValue= cursor.getAttributeText(DocxConstants.QNAME_FRAMESTYLE_LEFT_ATT);
-        styleRightValue= cursor.getAttributeText(DocxConstants.QNAME_FRAMESTYLE_RIGHT_ATT);
-      } else {
-        styleValue = cursor.getAttributeText(DocxConstants.QNAME_BORDER_STYLE_ATT);
-        styleBottomValue= cursor.getAttributeText(DocxConstants.QNAME_BORDER_STYLE_BOTTOM_ATT);
-        styleTopValue= cursor.getAttributeText(DocxConstants.QNAME_BORDER_STYLE_TOP_ATT);
-        styleLeftValue= cursor.getAttributeText(DocxConstants.QNAME_BORDER_STYLE_LEFT_ATT);
-        styleRightValue= cursor.getAttributeText(DocxConstants.QNAME_BORDER_STYLE_RIGHT_ATT);
-
-        colorValue = cursor.getAttributeText(DocxConstants.QNAME_BORDER_COLOR_ATT);
-        colorBottomValue = cursor.getAttributeText(DocxConstants.QNAME_BORDER_COLOR_BOTTOM_ATT);
-        colorTopValue = cursor.getAttributeText(DocxConstants.QNAME_BORDER_COLOR_TOP_ATT);
-        colorLeftValue = cursor.getAttributeText(DocxConstants.QNAME_BORDER_COLOR_LEFT_ATT);
-        colorRightValue = cursor.getAttributeText(DocxConstants.QNAME_BORDER_COLOR_RIGHT_ATT);
-      }
-
-      if (styleValue != null) {
-        setDefaultBorderType(xwpfBorderType(styleValue));
-      }
-
-      if (styleBottomValue != null) {
-        setBottomBorder(xwpfBorderType(styleBottomValue));
-      }
-      if (styleTopValue != null) {
-        setTopBorder(xwpfBorderType(styleTopValue));
-      }
-      if (styleLeftValue != null) {
-        setLeftBorder(xwpfBorderType(styleLeftValue));
-      }
-      if (styleRightValue != null) {
-        setRightBorder(xwpfBorderType(styleRightValue));
-      }
-
-      if (colorValue != null) {
-        setDefaultBorderColor(colorValue);
-      }
-
-      if (colorBottomValue != null) {
-        setBottomColor(colorBottomValue);
-      }
-      if (colorTopValue != null) {
-        setTopColor(colorTopValue);
-      }
-      if (colorLeftValue != null) {
-        setLeftColor(colorLeftValue);
-      }
-      if (colorRightValue != null) {
-        setRightColor(colorRightValue);
-      }
-    }
-
-    public void setDefaultBorderColor(String colorValue) {
-      this.defaultColor = colorValue;
-      if (this.getBottomColor() == null) this.setBottomColor(colorValue);
-      if (this.getTopColor() == null) this.setTopColor(colorValue);
-      if (this.getLeftColor() == null) this.setLeftColor(colorValue);
-      if (this.getRightColor() == null) this.setRightColor(colorValue);
-
-    }
-
-    public String getBottomColor() {
-      return this.bottomColor;
-    }
-
-    public String getTopColor() {
-      return this.topColor;
-    }
-
-    public String getLeftColor() {
-      return this.leftColor;
-    }
-
-    public String getRightColor() {
-      return this.rightColor;
-    }
-
-    public void setBottomColor(String colorValue) {
-      this.bottomColor = colorValue;
-    }
-
-    public void setTopColor(String colorValue) {
-      this.topColor = colorValue;
-    }
-
-    public void setLeftColor(String colorValue) {
-      this.leftColor = colorValue;
-    }
-
-    public void setRightColor(String colorValue) {
-      this.rightColor = colorValue;
-    }
-
-    public XWPFBorderType getDefaultBorderType() {
-      return defaultBorderType;
-    }
-
-    public void setDefaultBorderType(XWPFBorderType defaultBorderType) {
-      this.defaultBorderType = defaultBorderType;
-      if (getBottomBorder() == null) setBottomBorder(defaultBorderType);
-      if (getTopBorder() == null) setTopBorder(defaultBorderType);
-      if (getLeftBorder() == null) setLeftBorder(defaultBorderType);
-      if (getRightBorder() == null) setRightBorder(defaultBorderType);
-    }
-
-    public XWPFBorderType getTopBorder() {
-      return topBorder;
-    }
-
-    public void setTopBorder(XWPFBorderType topBorder) {
-      this.topBorder = topBorder;
-    }
-
-    public XWPFBorderType getBottomBorder() {
-      return bottomBorder;
-    }
-
-    public STBorder.Enum getBottomBorderEnum() {
-      return getBorderEnumForType(getBottomBorder());
-    }
-    public STBorder.Enum getTopBorderEnum() {
-      return getBorderEnumForType(getTopBorder());
-    }
-    public STBorder.Enum getLeftBorderEnum() {
-      return getBorderEnumForType(getLeftBorder());
-    }
-    public STBorder.Enum getRightBorderEnum() {
-      return getBorderEnumForType(getRightBorder());
-    }
-
-    public STBorder.Enum getBorderEnumForType(XWPFBorderType type) {
-      STBorder.Enum result = null;
-      if (type != null) {
-        result = stBorderType(type);
-      }
-      return result;
-    }
-
-    public void setBottomBorder(XWPFBorderType bottomBorder) {
-      this.bottomBorder = bottomBorder;
-    }
-
-    public XWPFBorderType getLeftBorder() {
-      return leftBorder;
-    }
-
-    public void setLeftBorder(XWPFBorderType leftBorder) {
-      this.leftBorder = leftBorder;
-    }
-
-    public XWPFBorderType getRightBorder() {
-      return rightBorder;
-    }
-
-    public void setRightBorder(XWPFBorderType rightBorder) {
-      this.rightBorder = rightBorder;
-    }
-
-    public XWPFBorderType getRowSepBorder() {
-      return rowSepBorder;
-    }
-
-    public void setRowSepBorder(XWPFBorderType rowSepBorder) {
-      this.rowSepBorder = rowSepBorder;
-    }
-
-    public XWPFBorderType getColSepBorder() {
-      return colSepBorder;
-    }
-
-    public void setColSepBorder(XWPFBorderType colSepBorder) {
-      this.colSepBorder = colSepBorder;
-    }
-
-    /**
-     * Determine if any borders are explicitly set
-     * @return True if one or more borders have a defined style.
-     */
-    public boolean hasBorders() {
-      boolean result =
-              getDefaultBorderType() != null ||
-              getBottomBorder() != null ||
-              getTopBorder() != null ||
-              getLeftBorder() != null ||
-              getRightBorder() != null;
-      return result;
-    }
-
-  }
 
   private static final Logger log = LogManager.getLogger(DocxGenerator.class);
 
@@ -566,7 +300,7 @@ public class DocxGenerator {
    * @param xml <document-properties> element
    */
   private void handleDocumentProperties(
-		  XWPFDocument doc, 
+		  XWPFDocument doc,
 		  XmlObject xml) {
 	  XmlCursor cursor = xml.newCursor();
 	  cursor.push();
@@ -582,78 +316,78 @@ public class DocxGenerator {
 	  if (cursor.toChild(DocxConstants.QNAME_CUSTOM_PROPERTIES_ELEM)) {
 		  handleCustomProperties(doc, cursor.getObject());
 	  }
-	  
+
   }
 
-/**
- * Set core properties from the <core-properties> element.
- * @param doc XWPF document to set the properties on
- * @param xml <core-properties> element.
- */
-private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
-	// DateTime properties have ISO times like:
-	// 2022-12-18T18:05:00Z
-	POIXMLProperties properties = doc.getProperties();
-	CoreProperties coreProperties = properties.getCoreProperties();
-	XmlCursor cursor = xml.newCursor();	
-	if (cursor.toFirstChild()) {
-		do {
-			String tagName = cursor.getName().getLocalPart();
-			String value = cursor.getTextValue();
-			if ("category".equals(tagName)) {
-				coreProperties.setCategory(value);
-			} else if ("contentStatus".equals(tagName)) {
-				coreProperties.setContentStatus(value);
-			} else if ("created".equals(tagName)) {
-				try {					
-					Date date = isoDateFormatter.parse(value);
-					Optional<Date> opional = Optional.of(date);
-					coreProperties.setCreated(opional);
-				} catch (Exception e) {
-					log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <created> value '" + value + "'");
-				}
-			} else if ("creator".equals(tagName)) {
-				coreProperties.setCreator(value);
-			} else if ("description".equals(tagName)) {
-				coreProperties.setDescription(value);
-			} else if ("identifier".equals(tagName)) {
-				coreProperties.setIdentifier(value);
-			} else if ("keywords".equals(tagName)) {
-				coreProperties.setKeywords(value);
-			} else if ("language".equals(tagName)) {
-				// There doesn't see to be a setLanguage() method on CoreProperties
-			} else if ("lastModifiedBy".equals(tagName)) {
-				coreProperties.setLastModifiedByUser(value);
-			} else if ("lastPrinted".equals(tagName)) {
-				try {					
-					Date date = isoDateFormatter.parse(value);
-					Optional<Date> opional = Optional.of(date);
-					coreProperties.setLastPrinted(opional);
-				} catch (Exception e) {
-					log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <lastPrinted> value '" + value + "'");
-				}				
-			} else if ("modified".equals(tagName)) {
-				try {					
-					Date date = isoDateFormatter.parse(value);
-					Optional<Date> opional = Optional.of(date);
-					coreProperties.setModified(opional);
-				} catch (Exception e) {
-					log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <modified> value '" + value + "'");
-				}				
-			} else if ("revision".equals(tagName)) {
-				coreProperties.setRevision(value);
-			} else if ("subject".equals(tagName)) {
-				coreProperties.setSubjectProperty(value);
-			} else if ("title".equals(tagName)) {
-				coreProperties.setTitle(value);
-			} else if ("version".equals(tagName)) {
-				coreProperties.setVersion(value);
-			} else {
-				log.warn("handleCoreProperties(): Unexpected element '" + tagName + "' in <core-properties>. Ignored.");
-			}
-		} while (cursor.toNextSibling());
-	}	
-}
+  /**
+   * Set core properties from the <core-properties> element.
+   * @param doc XWPF document to set the properties on
+   * @param xml <core-properties> element.
+   */
+  private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
+    // DateTime properties have ISO times like:
+    // 2022-12-18T18:05:00Z
+    POIXMLProperties properties = doc.getProperties();
+    CoreProperties coreProperties = properties.getCoreProperties();
+    XmlCursor cursor = xml.newCursor();
+    if (cursor.toFirstChild()) {
+      do {
+        String tagName = cursor.getName().getLocalPart();
+        String value = cursor.getTextValue();
+        if ("category".equals(tagName)) {
+          coreProperties.setCategory(value);
+        } else if ("contentStatus".equals(tagName)) {
+          coreProperties.setContentStatus(value);
+        } else if ("created".equals(tagName)) {
+          try {
+            Date date = isoDateFormatter.parse(value);
+            Optional<Date> opional = Optional.of(date);
+            coreProperties.setCreated(opional);
+          } catch (Exception e) {
+            log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <created> value '" + value + "'");
+          }
+        } else if ("creator".equals(tagName)) {
+          coreProperties.setCreator(value);
+        } else if ("description".equals(tagName)) {
+          coreProperties.setDescription(value);
+        } else if ("identifier".equals(tagName)) {
+          coreProperties.setIdentifier(value);
+        } else if ("keywords".equals(tagName)) {
+          coreProperties.setKeywords(value);
+        } else if ("language".equals(tagName)) {
+          // There doesn't see to be a setLanguage() method on CoreProperties
+        } else if ("lastModifiedBy".equals(tagName)) {
+          coreProperties.setLastModifiedByUser(value);
+        } else if ("lastPrinted".equals(tagName)) {
+          try {
+            Date date = isoDateFormatter.parse(value);
+            Optional<Date> opional = Optional.of(date);
+            coreProperties.setLastPrinted(opional);
+          } catch (Exception e) {
+            log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <lastPrinted> value '" + value + "'");
+          }
+        } else if ("modified".equals(tagName)) {
+          try {
+            Date date = isoDateFormatter.parse(value);
+            Optional<Date> opional = Optional.of(date);
+            coreProperties.setModified(opional);
+          } catch (Exception e) {
+            log.warn("handleCoreProperties(): " + e.getClass().getSimpleName() + " parsing <modified> value '" + value + "'");
+          }
+        } else if ("revision".equals(tagName)) {
+          coreProperties.setRevision(value);
+        } else if ("subject".equals(tagName)) {
+          coreProperties.setSubjectProperty(value);
+        } else if ("title".equals(tagName)) {
+          coreProperties.setTitle(value);
+        } else if ("version".equals(tagName)) {
+          coreProperties.setVersion(value);
+        } else {
+          log.warn("handleCoreProperties(): Unexpected element '" + tagName + "' in <core-properties>. Ignored.");
+        }
+      } while (cursor.toNextSibling());
+    }
+  }
 
 /**
  * Handle the <extended-properties> element.
@@ -663,8 +397,8 @@ private void handleCoreProperties(XWPFDocument doc, XmlObject xml) {
 private void handleExtendedProperties(XWPFDocument doc, XmlObject xml) {
 	POIXMLProperties properties = doc.getProperties();
 	ExtendedProperties extendedProperties = properties.getExtendedProperties();
-	XmlCursor cursor = xml.newCursor();	
-	
+	XmlCursor cursor = xml.newCursor();
+
 	if (cursor.toFirstChild()) {
 		do {
 			String tagName = cursor.getName().getLocalPart();
@@ -777,14 +511,14 @@ private void handleExtendedProperties(XWPFDocument doc, XmlObject xml) {
 				}
 			}
 		} while (cursor.toNextSibling());
-	}	
+	}
 }
 
 private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	POIXMLProperties properties = doc.getProperties();
 	CustomProperties customProperties = properties.getCustomProperties();
-	
-	XmlCursor cursor = xml.newCursor();	
+
+	XmlCursor cursor = xml.newCursor();
 	if (cursor.toFirstChild()) {
 		do {
 			String tagName = cursor.getName().getLocalPart();
@@ -792,7 +526,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 			String propName = cursor.getAttributeText(DocxConstants.QNAME_NAME_ATT);
 			if (propName == null || "".equals(propName)) {
 				log.warn("handleCustomProperties(): No value for required @name attribute on <" + tagName + "> element with value '" + value + "'");
-				continue;				
+				continue;
 			}
 			customProperties.addProperty(propName, value);
 		} while (cursor.toNextSibling());
@@ -1009,13 +743,13 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
     // Levels to include
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_L_ATT);
-    if (null != attValue) {     
+    if (null != attValue) {
       tocOptions += " \\l \"" + attValue + "\"";
     }
 
     // Turn off page numbers
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_N_ATT);
-    if (null != attValue) {     
+    if (null != attValue) {
       tocOptions += " \\n";
       if ("none".equalsIgnoreCase(attValue)) {
         // No additional parameter
@@ -1064,7 +798,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\u";
       }
     }
-    
+
     // Preserves tab entries within table entries.
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_W_ATT);
     if (null != attValue) {
@@ -1074,7 +808,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\w";
       }
     }
-    
+
     // Preserves newline characters within table entries.
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_X_ATT);
     if (null != attValue) {
@@ -1084,7 +818,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         tocOptions += " \\x";
       }
     }
-    
+
     // Hides tab leader and page numbers in web page view (§17.18.102).
     // Default is "true" per the SWPX grammar
     attValue = cursor.getAttributeText(DocxConstants.QNAME_ARG_Z_ATT);
@@ -1095,7 +829,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
     }
 
     ctText.setStringValue("TOC " + tocOptions);
-    
+
   }
 
   private void makeParagraphStyle(XWPFDocument doc, String styleId, String string) {
@@ -2693,10 +2427,11 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
    */
   private void makeTable(XWPFTable table, XmlObject xml) throws DocxGenerationException {
 
-    // If the column widths are absolute measurements they can be set on the grid,
-    // but if they are proportional, then they have to be set on at least the first
-    // row's cells. The table grid is not required (it always reflects the calculated
-    // width of the columns, possibly determined by applying percentage table and
+    // If the column widths are absolute measurements they can be set
+    // on the grid, but if they are proportional, then they have to be
+    // set on at least the first row's cells. The table grid is not
+    // required (it always reflects the calculated width of the
+    // columns, possibly determined by applying percentage table and
     // column widths.
     XmlCursor cursor = xml.newCursor();
 
@@ -2707,8 +2442,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
     setTableIndents(table, cursor);
     setTableLayout(table, cursor);
-
-
+    setTableAlign(table, cursor);
 
     String styleName = cursor.getAttributeText(DocxConstants.QNAME_STYLE_ATT);
     String styleId = cursor.getAttributeText(DocxConstants.QNAME_STYLEID_ATT);
@@ -2854,6 +2588,26 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
   }
 
+  private void setTableAlign(XWPFTable table, XmlCursor cursor) throws DocxGenerationException {
+    String align = cursor.getAttributeText(DocxConstants.QNAME_ALIGN_ATT);
+    if (align == null) {
+      return;
+    }
+
+    TableRowAlign alignObj;
+    if (align.equals("start")) {
+      alignObj = TableRowAlign.LEFT;
+    } else if (align.equals("center")) {
+      alignObj = TableRowAlign.CENTER;
+    } else if (align.equals("end")) {
+      alignObj = TableRowAlign.RIGHT;
+    } else {
+      throw new DocxGenerationException("Unknown value for table align: '" +
+                                        align + "'");
+    }
+
+    table.setTableAlignment(alignObj);
+  }
 
   /**
    * Sets the w:tblLayout to fixed or auto
@@ -2906,20 +2660,17 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
   }
 
   private TableBorderStyles setTableFrame(XWPFTable table, XmlCursor cursor) {
-    int frameWidth = 8; // 1pt
     int frameSpace = 0;
     String frameColor = "auto";
 
     String frameValue = cursor.getAttributeText(DocxConstants.QNAME_FRAME_ATT);
 
-    TableBorderStyles borderStyles =
-        new TableBorderStyles(cursor.getObject());
+    TableBorderStyles borderStyles = new TableBorderStyles(cursor.getObject());
 
     XWPFBorderType topBorder = borderStyles.getTopBorder();
     XWPFBorderType bottomBorder = borderStyles.getBottomBorder();
     XWPFBorderType leftBorder = borderStyles.getLeftBorder();
     XWPFBorderType rightBorder = borderStyles.getRightBorder();
-
 
     if (frameValue != null) {
       if ("none".equals(frameValue)) {
@@ -2953,21 +2704,43 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         leftBorder = XWPFBorderType.NONE;
         rightBorder = XWPFBorderType.NONE;
       }
+    }
 
+    int bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_BOTTOM_ATT, cursor);
+    if (bottomBorder != null || bwidth != -1) {
+      table.setBottomBorder(bottomBorder, bwidth, frameSpace, frameColor);
     }
-    if (bottomBorder != null) {
-      table.setBottomBorder(bottomBorder, frameWidth, frameSpace, frameColor);
+
+    bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_TOP_ATT, cursor);
+    if (topBorder != null || bwidth != -1) {
+      table.setTopBorder(topBorder, bwidth, frameSpace, frameColor);
     }
-    if (topBorder != null) {
-      table.setTopBorder(topBorder, frameWidth, frameSpace, frameColor);
+
+    bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_LEFT_ATT, cursor);
+    if (leftBorder != null || bwidth != -1) {
+      table.setLeftBorder(leftBorder, bwidth, frameSpace, frameColor);
     }
-    if (leftBorder != null) {
-      table.setLeftBorder(leftBorder, frameWidth, frameSpace, frameColor);
-    }
-    if (rightBorder != null) {
-      table.setRightBorder(rightBorder, frameWidth, frameSpace, frameColor);
+
+    bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_RIGHT_ATT, cursor);
+    if (rightBorder != null || bwidth != -1) {
+      table.setRightBorder(rightBorder, bwidth, frameSpace, frameColor);
     }
     return borderStyles;
+  }
+
+  private int getBorderWidth(QName attribute, XmlCursor cursor) {
+    String width = cursor.getAttributeText(attribute);
+    if (width == null) {
+      return -1;
+    }
+
+    // border width is given in 1/8th of a point
+    try {
+      return (int) Math.round(Measurement.toPoints(width, dotsPerInch) * 8);
+    } catch (MeasurementException e) {
+      log.warn("getMeasurementValue(): " + e.getClass().getSimpleName() + " - " + e.getMessage(), e);
+      return -1;
+    }
   }
 
   /**
@@ -2978,200 +2751,6 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
    */
   private XWPFBorderType getBorderStyle(XWPFBorderType explictType, XWPFBorderType defaultType) {
     return (explictType == null ? defaultType : explictType);
-  }
-
-  /**
-   * Get the XWPFBorderType for the specified STBorder value.
-   * @param borderValue Border value (e.g., "wave").
-   * @return Corresponding XWPFBorderType value or null if there is no corresponding value.
-   */
-  private XWPFBorderType xwpfBorderType(String borderValue) {
-
-    STBorder.Enum borderStyle = STBorder.Enum.forString(borderValue);
-
-    // There's not a direct correspondence between STBorder int values
-    // and XWPFBorderType so just building a switch statement.
-    XWPFBorderType xwpfType = null;
-    switch (borderStyle.intValue()) {
-    case STBorder.INT_DOT_DASH:
-      xwpfType = XWPFBorderType.DOT_DASH;
-      break;
-    case STBorder.INT_DASH_SMALL_GAP:
-      xwpfType = XWPFBorderType.DASH_SMALL_GAP;
-      break;
-    case STBorder.INT_DASH_DOT_STROKED:
-      xwpfType = XWPFBorderType.DASH_DOT_STROKED;
-      break;
-    case STBorder.INT_DASHED:
-      xwpfType = XWPFBorderType.DASHED;
-      break;
-    case STBorder.INT_DOT_DOT_DASH:
-      xwpfType = XWPFBorderType.DOT_DOT_DASH;
-      break;
-    case STBorder.INT_DOTTED:
-      xwpfType = XWPFBorderType.DOTTED;
-      break;
-    case STBorder.INT_DOUBLE:
-      xwpfType = XWPFBorderType.DOUBLE;
-      break;
-    case STBorder.INT_DOUBLE_WAVE:
-      xwpfType = XWPFBorderType.DOUBLE_WAVE;
-      break;
-    case STBorder.INT_INSET:
-      xwpfType = XWPFBorderType.INSET;
-      break;
-    case STBorder.INT_NIL:
-      xwpfType = XWPFBorderType.NIL;
-      break;
-    case STBorder.INT_NONE:
-      xwpfType = XWPFBorderType.NONE;
-      break;
-    case STBorder.INT_OUTSET:
-      xwpfType = XWPFBorderType.OUTSET;
-      break;
-    case STBorder.INT_SINGLE:
-      xwpfType = XWPFBorderType.SINGLE;
-      break;
-    case STBorder.INT_THICK:
-      xwpfType = XWPFBorderType.THICK;
-      break;
-    case STBorder.INT_THICK_THIN_LARGE_GAP:
-      xwpfType = XWPFBorderType.THICK_THIN_LARGE_GAP;
-      break;
-    case STBorder.INT_THICK_THIN_MEDIUM_GAP:
-      xwpfType = XWPFBorderType.THICK_THIN_MEDIUM_GAP;
-      break;
-    case STBorder.INT_THICK_THIN_SMALL_GAP:
-      xwpfType = XWPFBorderType.THICK_THIN_SMALL_GAP;
-      break;
-    case STBorder.INT_THIN_THICK_LARGE_GAP:
-      xwpfType = XWPFBorderType.THIN_THICK_LARGE_GAP;
-      break;
-    case STBorder.INT_THIN_THICK_MEDIUM_GAP:
-      xwpfType = XWPFBorderType.THIN_THICK_MEDIUM_GAP;
-      break;
-    case STBorder.INT_THIN_THICK_SMALL_GAP:
-      xwpfType = XWPFBorderType.THIN_THICK_SMALL_GAP;
-      break;
-    case STBorder.INT_THIN_THICK_THIN_LARGE_GAP:
-      xwpfType = XWPFBorderType.THIN_THICK_THIN_LARGE_GAP;
-      break;
-    case STBorder.INT_THIN_THICK_THIN_MEDIUM_GAP:
-      xwpfType = XWPFBorderType.THIN_THICK_THIN_MEDIUM_GAP;
-      break;
-    case STBorder.INT_THIN_THICK_THIN_SMALL_GAP:
-      xwpfType = XWPFBorderType.THIN_THICK_THIN_SMALL_GAP;
-      break;
-    case STBorder.INT_THREE_D_EMBOSS:
-      xwpfType = XWPFBorderType.THREE_D_EMBOSS;
-      break;
-    case STBorder.INT_THREE_D_ENGRAVE:
-      xwpfType = XWPFBorderType.THREE_D_ENGRAVE;
-      break;
-    case STBorder.INT_TRIPLE:
-      xwpfType = XWPFBorderType.TRIPLE;
-      break;
-    case STBorder.INT_WAVE:
-      xwpfType = XWPFBorderType.WAVE;
-      break;
-    }
-    return xwpfType;
-  }
-
-  /**
-   * Get the STBorderType.Enum for the specified STBorder value.
-   * @param borderValue Border value (e.g., "wave").
-   * @return Corresponding XWPFBorderType value or null if there is no corresponding value.
-   */
-  private STBorder.Enum stBorderType(XWPFBorderType borderType) {
-
-    // There's not a direct correspondence between STBorder int values
-    // and XWPFBorderType so just building a switch statement.
-    STBorder.Enum stBorder = null;
-    switch (borderType) {
-    case DOT_DASH:
-      stBorder = STBorder.DOT_DASH;
-      break;
-    case DASH_SMALL_GAP:
-      stBorder = STBorder.DASH_SMALL_GAP;
-      break;
-    case DASH_DOT_STROKED:
-      stBorder = STBorder.DASH_DOT_STROKED;
-      break;
-    case DASHED:
-      stBorder = STBorder.DASHED;
-      break;
-    case DOT_DOT_DASH:
-      stBorder = STBorder.DOT_DOT_DASH;
-      break;
-    case DOTTED:
-      stBorder = STBorder.DOTTED;
-      break;
-    case DOUBLE:
-      stBorder = STBorder.DOUBLE;
-      break;
-    case DOUBLE_WAVE:
-      stBorder = STBorder.DOUBLE_WAVE;
-      break;
-    case INSET:
-      stBorder = STBorder.INSET;
-      break;
-    case NIL:
-      stBorder = STBorder.NIL;
-      break;
-    case NONE:
-      stBorder = STBorder.NONE;
-      break;
-    case OUTSET:
-      stBorder = STBorder.OUTSET;
-      break;
-    case SINGLE:
-      stBorder = STBorder.SINGLE;
-      break;
-    case THICK:
-      stBorder = STBorder.THICK;
-      break;
-    case THICK_THIN_LARGE_GAP:
-      stBorder = STBorder.THICK_THIN_LARGE_GAP;
-      break;
-    case THICK_THIN_MEDIUM_GAP:
-      stBorder = STBorder.THICK_THIN_MEDIUM_GAP;
-      break;
-    case THICK_THIN_SMALL_GAP:
-      stBorder = STBorder.THICK_THIN_SMALL_GAP;
-      break;
-    case THIN_THICK_LARGE_GAP:
-      stBorder = STBorder.THIN_THICK_LARGE_GAP;
-      break;
-    case THIN_THICK_MEDIUM_GAP:
-      stBorder = STBorder.THIN_THICK_MEDIUM_GAP;
-      break;
-    case THIN_THICK_SMALL_GAP:
-      stBorder = STBorder.THIN_THICK_SMALL_GAP;
-      break;
-    case THIN_THICK_THIN_LARGE_GAP:
-      stBorder = STBorder.THIN_THICK_THIN_LARGE_GAP;
-      break;
-    case THIN_THICK_THIN_MEDIUM_GAP:
-      stBorder = STBorder.THIN_THICK_THIN_MEDIUM_GAP;
-      break;
-    case THIN_THICK_THIN_SMALL_GAP:
-      stBorder = STBorder.THIN_THICK_THIN_SMALL_GAP;
-      break;
-    case THREE_D_EMBOSS:
-      stBorder = STBorder.THREE_D_EMBOSS;
-      break;
-    case THREE_D_ENGRAVE:
-      stBorder = STBorder.THREE_D_ENGRAVE;
-      break;
-    case TRIPLE:
-      stBorder = STBorder.TRIPLE;
-      break;
-    case WAVE:
-      stBorder = STBorder.WAVE;
-      break;
-    }
-    return stBorder;
   }
 
   /**
@@ -3346,7 +2925,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
         // Issue 134: If <td> is empty, hasMore will be false.
         if (!hasMore) {
           // Leave the empty paragraph, which is required by Word.
-          
+
         } else {
 			// Cells always have at least one paragraph.
 			cell.removeParagraph(0);
@@ -3354,7 +2933,7 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	        // the cell has to *end* with a paragraph, so if the last block isn't
 	        // a paragraph we need to add one at the end.  using this to track
 	        boolean lastIsParagraph = false;
-	
+
 	        // convert the contents of the cell
 	          while (hasMore) {
 	            if (cursor.getName().equals(DocxConstants.QNAME_P_ELEM)) {
@@ -3375,18 +2954,16 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	              }
 	            } else if (cursor.getName().equals(DocxConstants.QNAME_TABLE_ELEM)) {
 	            lastIsParagraph = false;
-	
+
 	              // record how many tables were in the cell previously
 	              int preTables = cell.getCTTc().getTblList().size();
-	  
+
 	              CTTbl ctTbl = cell.getCTTc().addNewTbl();
 	              ctTbl = cell.getCTTc().addNewTbl();
-	              CTTblPr tblPr = ctTbl.addNewTblPr();
-	              tblPr.addNewTblW();
-	  
+
 	              XWPFTable nestedTable = new XWPFTable(ctTbl, cell);
 	              makeTable(nestedTable, cursor.getObject());
-	  
+
 	              // for some reason this inserts two tables, where the
 	              // first one is empty. we need to remove that one.
 	              // luckily, the number of tables we used to have equals
@@ -3395,10 +2972,10 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 	            } else {
 	              log.warn("Table cell contains unknown element {} -- skipping", cursor.getName());
 	            }
-	  
+
 	            hasMore = cursor.toNextSibling();
 	          }
-	
+
 	        // cell didn't end in a paragraph, so need to add one
 	        if (!lastIsParagraph) {
 	          cell.addParagraph();
@@ -3416,7 +2993,6 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
    * Set the borders on the cells.
    * @param cursor cursor for the table cell markup
    * @param ctTcPr Table cell style properties
-   * @return
    */
   private void setCellBorders(XmlCursor cursor, CTTcPr ctTcPr) {
 
@@ -3428,37 +3004,53 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
       // Borders can be set per edge:
 
-      if (borderStyles.getBottomBorder() != null) {
+      int bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_BOTTOM_ATT, cursor);
+      if (borderStyles.getBottomBorder() != null || bwidth != -1) {
         CTBorder bottom = borders.addNewBottom();
         STBorder.Enum val = borderStyles.getBottomBorderEnum();
         if (val != null) {
           bottom.setVal(val);
-        } else {
+        } else if (bwidth == -1) {
           log.warn("setCellBorders(): Failed to get STBorder.Enum value for XWPFBorderStyle \"" + borderStyles.getBottomBorder().name() + "\"");
         }
         if (borderStyles.getBottomColor() != null) {
           bottom.setColor(borderStyles.getBottomColor());
         }
+        if (bwidth != -1) {
+          bottom.setSz(BigInteger.valueOf(bwidth));
+        }
       }
-      if (borderStyles.getTopBorder() != null) {
+      bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_TOP_ATT, cursor);
+      if (borderStyles.getTopBorder() != null || bwidth != -1) {
         CTBorder top = borders.addNewTop();
         top.setVal(borderStyles.getTopBorderEnum());
         if (borderStyles.getTopColor() != null) {
           top.setColor(borderStyles.getTopColor());
         }
+        if (bwidth != -1) {
+          top.setSz(BigInteger.valueOf(bwidth));
+        }
       }
-      if (borderStyles.getLeftBorder() != null) {
+      bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_LEFT_ATT, cursor);
+      if (borderStyles.getLeftBorder() != null || bwidth != -1) {
         CTBorder left = borders.addNewLeft();
         left.setVal(borderStyles.getLeftBorderEnum());
         if (borderStyles.getLeftColor() != null) {
           left.setColor(borderStyles.getLeftColor());
         }
+        if (bwidth != -1) {
+          left.setSz(BigInteger.valueOf(bwidth));
+        }
       }
-      if (borderStyles.getRightBorder() != null) {
+      bwidth = getBorderWidth(DocxConstants.QNAME_BORDER_WIDTH_RIGHT_ATT, cursor);
+      if (borderStyles.getRightBorder() != null || bwidth != -1) {
         CTBorder right = borders.addNewRight();
         right.setVal(borderStyles.getRightBorderEnum());
         if (borderStyles.getRightColor() != null) {
           right.setColor(borderStyles.getRightColor());
+        }
+        if (bwidth != -1) {
+          right.setSz(BigInteger.valueOf(bwidth));
         }
       }
     }
