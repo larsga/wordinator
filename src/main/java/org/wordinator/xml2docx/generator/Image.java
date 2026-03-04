@@ -134,6 +134,9 @@ public class Image {
    */
   private static int getImageFormatForMimeType(String mimeType) {
     String formatString = mimeType.split("/")[1];
+    if (formatString.endsWith("+xml")) {
+      formatString = formatString.substring(0, formatString.length() - 4);
+    }
     return getImageFormat(formatString);
   }
 
@@ -248,6 +251,7 @@ public class Image {
 
   private void findImageFormat() throws InvalidInputException {
     String imgExtension = FilenameUtils.getExtension(imageFilename).toLowerCase();
+
     if (null != imgExtension && !"".equals(imgExtension)) {
       this.format = getImageFormat(imgExtension);
     } else {
