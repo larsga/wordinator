@@ -954,6 +954,28 @@ public class TestDocxGenerator extends TestCase {
     assertEquals(227, borders.getBottom().getSz().intValueExact());
   }
 
+  public void testSVG() throws Exception {
+    XWPFDocument doc = convert("simplewp/simplewpml-svg.swpx", "out/svg.docx");
+    List<IBodyElement> contents = doc.getBodyElements();
+    assertEquals(1, contents.size());
+
+    Iterator<IBodyElement> it = contents.iterator();
+    IBodyElement elem = it.next();
+    assertEquals(BodyElementType.PARAGRAPH, elem.getElementType());
+
+    XWPFParagraph p = (XWPFParagraph) elem;
+    assertEquals(2, p.getRuns().size());
+
+    XWPFRun run = p.getRuns().get(0);
+    assertEquals("Image 1", run.getText(0));
+
+    run = p.getRuns().get(1);
+    XWPFPicture picture = run.getEmbeddedPictures().get(0);
+    assertNotNull("Expected a picture", picture);
+    assertEquals("Expected width of 300", picture.getWidth(), 300.0);
+    assertEquals("Expected height (depth) of 300", picture.getDepth(), 300.0);
+  }
+
   // ===== INTERNAL UTILITIES
 
   private XWPFDocument convert(String infile, String outfile) throws Exception {
