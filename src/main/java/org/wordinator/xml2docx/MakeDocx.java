@@ -27,6 +27,7 @@ import org.apache.xmlbeans.XmlObject;
 import org.wordinator.xml2docx.generator.DocxGeneratingOutputUriResolver;
 import org.wordinator.xml2docx.generator.DocxGenerationException;
 import org.wordinator.xml2docx.generator.DocxGenerator;
+import org.wordinator.xml2docx.generator.InvalidInputException;
 import org.wordinator.xml2docx.saxon.Log4jSaxonLogger;
 import org.wordinator.xml2docx.saxon.LoggingMessageListener;
 
@@ -83,6 +84,9 @@ public class MakeDocx {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("wordinator", options, true);
       System.exit(1);
+    } catch (InvalidInputException e) {
+      System.err.println("INVALID INPUT: " + e.getMessage());
+      System.exit(1);
     } catch (DocxGenerationException e) {
       System.err.println("ERROR: " + e.getMessage());
       System.exit(1);
@@ -90,9 +94,10 @@ public class MakeDocx {
   }
 
   /**
-   * Does the actual command line processing. You can call this from your own
-   * command line processor if you need additional command-line options, for example,
-   * to set additional XSLT parameters.
+   * Does the actual command line processing. You can call this from
+   * your own command line processor if you need additional
+   * command-line options, for example, to set additional XSLT
+   * parameters.
    * @param options Command-line options
    * @param args Command-line arguments
    * @throws ParseException Thrown if there is problem parsing the input
@@ -351,12 +356,6 @@ public class MakeDocx {
       .hasArg(true)
       .desc("The path and filename of the XSLT transform for generating SWPX documents.")
       .build();
-    Option dpi = Option.builder("d")
-      .longOpt("dpi")
-      .required(false)
-      .hasArg(true)
-      .desc("The dots-per-inch value to use when converting pixels to absolute measurements, e.g., \"72\" or \"96\".")
-      .build();
     Option chunkLevel = Option.builder(OPTION_CHAR_CHUNKLEVEL)
       .longOpt("chunklevel")
       .required(false)
@@ -375,7 +374,6 @@ public class MakeDocx {
     options.addOption(output);
     options.addOption(template);
     options.addOption(transform);
-    options.addOption(dpi);
     options.addOption(chunkLevel);
     options.addOption(catalog);
 

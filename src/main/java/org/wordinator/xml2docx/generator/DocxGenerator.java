@@ -1,19 +1,13 @@
 package org.wordinator.xml2docx.generator;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,12 +17,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.imageio.ImageIO;
 import javax.xml.namespace.QName;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ooxml.POIXMLProperties;
@@ -36,7 +26,6 @@ import org.apache.poi.ooxml.POIXMLProperties.CoreProperties;
 import org.apache.poi.ooxml.POIXMLProperties.ExtendedProperties;
 import org.apache.poi.ooxml.POIXMLProperties.CustomProperties;
 import org.apache.poi.ss.formula.eval.NotImplementedException;
-import org.apache.poi.util.Units;
 import org.apache.poi.wp.usermodel.HeaderFooterType;
 import org.apache.poi.xwpf.usermodel.BodyElementType;
 import org.apache.poi.xwpf.usermodel.BreakType;
@@ -2083,264 +2072,22 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
   /**
    * Construct an image reference
-   * @param doc
-   * @param cursor
    */
-  private void makeImage(XWPFParagraph para, XmlCursor cursor) throws DocxGenerationException {
+  private void makeImage(XWPFParagraph para, XmlCursor cursor)
+    throws DocxGenerationException {
     cursor.push();
 
-    // FIXME: This is all a bit scripty because of the need to get both the image data and
-    //        MIME type. Not sure it's worth the effort to make it cleaner. Could define
-    //        an object to hold the image data and MIME type and file name.
+    Image.makeImage(para, cursor, imageCounter, inFile, dotsPerInch);
 
-    String imageUrl = cursor.getAttributeText(DocxConstants.QNAME_SRC_ATT);
-    if (null == imageUrl) {
-      log.error("- [ERROR] No @src attribute for image.");
-      return;
-    }
-    // Issue 72: Accept local file URLs, external URLs, and data:image/... URLs
-    URI uri;
-    try {
-      uri = new URI(imageUrl);
-    } catch (URISyntaxException e) {
-      log.error("- [ERROR] " + e.getClass().getSimpleName() + " on img/@src value: " + e.getMessage());
-      return;
-    }
-    String imageFilename = null;
-    InputStream inStream;
-    String mimeType = null;
-    URL url;
-    try {
-      if (uri.isAbsolute()) {
-        if ("data".equals(uri.getScheme())) {
-          try {
-            inStream = getStreamForDataUrl(uri);
-            mimeType = getMimeTypeForDataUrl(uri);
-          } catch (Exception e) {
-            log.error(e.getClass().getSimpleName() + " decoding image data URL: " + e.getMessage());
-            return;
-          }
-        } else {
-          // Should be a normal URL
-          url = uri.toURL();
-          URLConnection conn = null;
-          try {
-            conn = url.openConnection();
-          } catch (Exception e) {
-            log.error(e.getClass().getSimpleName() + " opening image URL: " + e.getMessage());
-            return;
-          }
-          // If we need to get the MIME type from the server, this might do it:
-          // mimeType = conn.getContentEncoding();
-          try {
-            inStream = conn.getInputStream();
-          } catch (IOException e) {
-            log.error(e.getClass().getSimpleName() + " reading image URL: " + e.getMessage());
-            return;
-          }
-          File file = new File(url.getFile());
-          imageFilename = file.getName();
-        }
-      } else {
-        // Must be relative file reference, read the file
-        URL baseUrl = inFile.getParentFile().toURI().toURL();
-        url = new URL(baseUrl, imageUrl);
-        File file = new File(url.getFile());
-        imageFilename = file.getName();
-        try {
-          inStream = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-          log.error("Image file \"" + imageUrl + "\" not found.");
-          return;
-        }
-      }
-    } catch (MalformedURLException e) {
-      log.error("- [ERROR] " + e.getClass().getSimpleName() + " on img/@src value: " + e.getMessage());
-      return;
-    }
-
-    // We have to read the input stream twice, so capture the bytes
-    // so we can make new streams. Can't depend on reset() on
-    // the input stream (i.e., HTTP connetion stream).
-    byte[] imageBytes = null;
-    try {
-      imageBytes = IOUtils.toByteArray(inStream);
-    } catch (IOException e) {
-      log.error("- [ERROR] " + e.getClass().getSimpleName() + " reading image input stream: " + e.getMessage());
-      return;
-    }
-
-    // This assumes that the URL looks like a file reference.
-    if (imageFilename == null || imageFilename.equals("")) {
-      imageFilename = "image_" + imageCounter;
-    }
-
-    String imgExtension = FilenameUtils.getExtension(imageFilename).toLowerCase();
-    int format = 0;
-    if (null != imgExtension && !"".equals(imgExtension)) {
-      format = getImageFormat(imgExtension);
-    } else {
-      format = getImageFormatForMimeType(mimeType);
-    }
-    int width = 200; // Default width in pixels
-    int height = 200; // Default height in pixels
-
-    if (format == 0) {
-      // FIXME: Might be more appropriate to throw an exception here.
-        log.error("Unsupported picture, format code \"" + format + "\": " + imageFilename +
-                ". Expected emf|wmf|pict|jpeg|jpg|png|dib|gif|tiff|eps|bmp|wpg");
-        cursor.pop();
-        return;
-    }
-    BufferedImage img = null;
-    int intrinsicWidth = 0;
-    int intrinsicHeight = 0;
-    try {
-      // FIXME: Need to limit this to the formats Java2D can read.
-      img = ImageIO.read(new ByteArrayInputStream(imageBytes));
-      intrinsicWidth = img.getWidth();
-      intrinsicHeight = img.getHeight();
-    } catch (IOException e) {
-      log.warn("" + e.getClass().getSimpleName() + " exception loading image file '" + imageFilename +"': " +
-                     e.getMessage());
-    }
-    String widthVal = cursor.getAttributeText(DocxConstants.QNAME_WIDTH_ATT);
-    String heightVal = cursor.getAttributeText(DocxConstants.QNAME_HEIGHT_ATT);
-    boolean goodWidth = false;
-    boolean goodHeight = false;
-
-    // Issue 82: Handle empty width and height attributes (width="", height="")
-    if (null != widthVal && !"".equals(widthVal.trim())) {
-      try {
-        width = (int) Measurement.toPixels(widthVal, getDotsPerInch());
-        goodWidth = true;
-      } catch (MeasurementException e) {
-        log.error(e.getClass().getSimpleName() + ": " + e.getMessage());
-        log.error("Using default width value " + width);
-        width = intrinsicWidth > 0 ? intrinsicWidth : width;
-      }
-    } else {
-      width = intrinsicWidth > 0 ? intrinsicWidth : width;
-    }
-
-    if (null != heightVal && !"".equals(heightVal.trim())) {
-      try {
-        height = (int) Measurement.toPixels(heightVal, getDotsPerInch());
-        goodHeight = true;
-      } catch (MeasurementException e) {
-        log.error(e.getClass().getSimpleName() + ": " + e.getMessage());
-        log.error("Using default height value " + height);
-        height = intrinsicHeight > 0 ? intrinsicHeight : height;
-      }
-    } else {
-      height = intrinsicHeight > 0 ? intrinsicHeight : height;
-    }
-
-    // Issue 16: If either dimension is not specified, scale the intrinsic width
-    //           proportionally.
-    if (widthVal == null && heightVal != null && (intrinsicWidth > 0) && goodHeight) {
-      double factor = height / intrinsicHeight;
-      width = (int)Math.round(intrinsicWidth * factor);
-    }
-    if (widthVal != null && heightVal == null && (intrinsicHeight > 0) && goodWidth) {
-      double factor = (double)width / intrinsicWidth;
-      height = (int)Math.round(intrinsicHeight * factor);
-    }
-
-    // At this point, the measurement is pixels. If the original specification
-    // was also pixels, we need to convert to inches and then back to pixels
-    // in order to apply the dots-per-inch value.
-
-    // Word uses a DPI of 72, so if the current dotsPerInch is not 72, we need to
-    // adjust the width and height by the difference.
-
-    if (getDotsPerInch() != 72) {
-      double factor = 72.0 / getDotsPerInch();
-      if (widthVal != null && widthVal.matches("[0-9]+(px)?")) {
-        width =  (int)Math.round(width * factor);
-      }
-      if (heightVal != null && heightVal.matches("[0-9]+(px)?")) {
-        height = (int)Math.round(height * factor);
-      }
-    }
-
-
-    XWPFRun run = para.createRun();
-
-        try {
-      run.addPicture(new ByteArrayInputStream(imageBytes),
-                 format,
-                 imageFilename,
-                 Units.toEMU(width),
-                 Units.toEMU(height));
-    } catch (Exception e) {
-      log.warn("" + e.getClass().getSimpleName() + " exception adding picture for reference '" + imageFilename +"': " +
-                            e.getMessage());
-    }
     imageCounter++;
     cursor.pop();
   }
 
   /**
-   * Get the Word image format code for the specified MIME type
-   * @param mimeType The MIME type to evaluate, i.e. "image/jpeg"
-   * @return The format code or zero if the MIME type is not recognized.
-   */
-  private int getImageFormatForMimeType(String mimeType) {
-    int format = 0;
-    String formatString = mimeType.split("/")[1];
-    format = getImageFormat(formatString);
-    return format;
-  }
-
-  /**
-   * Get the MIME type from a data URL.
-   * @param uri The URI that is a data URL
-   * @return The MIME type as a string, or null if there is no specified MIME type.
-   */
-  private String getMimeTypeForDataUrl(URI uri) {
-    String mimeType = null;
-    String url = uri.toString();
-    // Data URL is data:[{mimeType}][;base64],{data}
-    String[] tokens = url.substring(5).split(",");
-    String props = tokens[0];
-    if (props.contains(";")) {
-      mimeType = props.split(";")[0];
-    } else {
-      if (!"".equals(props)) {
-        mimeType = props;
-      }
-    }
-    return mimeType;
-  }
-
-  /**
-   * Get an input stream with the bytes from a data: URL
-   * @param uri The URI that is the data: URL
-   * @return Input Stream that provides access to the data bytes.
-   */
-  private InputStream getStreamForDataUrl(URI uri) throws Exception {
-     InputStream inStream = null;
-     String url = uri.toString();
-     // Data URL is data:[{mimeType}][;base64],{data}
-     String[] tokens = url.substring(5).split(",");
-     String data = tokens[1];
-     String props = tokens[0];
-     if (!props.matches(".*base64")) {
-       throw new Exception("data: URL does not specify \"base64\", cannot decode it. URL starts with: \"" + url.substring(0, 10));
-     }
-     byte[] bytes = Base64.decodeBase64(data);
-     inStream = new ByteArrayInputStream(bytes);
-     return inStream;
-  }
-
-  /**
    * Construct a hyperlink
-   * @param doc
-   * @param cursor
-   * @throws Exception
    */
-  private void makeHyperlink(XWPFParagraph para, XmlCursor cursor) throws DocxGenerationException {
+  private void makeHyperlink(XWPFParagraph para, XmlCursor cursor)
+    throws DocxGenerationException {
 
     String href = cursor.getAttributeText(DocxConstants.QNAME_HREF_ATT);
 
@@ -2387,8 +2134,8 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
   }
 
   /**
-   * Set the dots-per-inch to use when converting from pixels to absolute measurements.
-   * <p>Typical values are 72 and 96</p>
+   * Set the dots-per-inch to use when converting from pixels to
+   * absolute measurements. Typical values are 72 and 96.
    * @param dotsPerInch The dots-per-inch value.
    */
   public void setDotsPerInch(int dotsPerInch) {
@@ -2397,26 +2144,18 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
 
   /**
    * Construct an embedded object.
-   * @param para
    * @param cursor Cursor pointing to an <object> element.
    */
   private void makeObject(XWPFParagraph para, XmlCursor cursor) throws DocxGenerationException {
-    throw new NotImplementedException("Object handling not implemented");
-    //     cursor.push();
-    //    cursor.pop();
-
+    throw new DocxGenerationException("Object handling not implemented");
   }
 
   /**
    * Construct an embedded object.
-   * @param doc
    * @param cursor Cursor pointing to an <object> element.
    */
   private void makeObject(XWPFDocument doc, XmlCursor cursor) throws DocxGenerationException {
-    throw new NotImplementedException("Object handling not implemented");
-    //     cursor.push();
-    //    cursor.pop();
-
+    throw new DocxGenerationException("Object handling not implemented");
   }
 
   /**
@@ -3169,32 +2908,5 @@ private void handleCustomProperties(XWPFDocument doc, XmlObject xml) {
     rpr.addNewSzCs().setVal(new BigInteger("20"));
 
     doc.getStyles().addStyle(new XWPFStyle(style));
-
   }
-
-  /**
-   * Get the Word-specific format value.
-   * @param imgExtension
-   * @return The format or 0 (zero) if the format is not recognized.
-   */
-  private int getImageFormat(String imgExtension) {
-    int format = 0;
-
-    if ("emf".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_EMF;
-        else if ("wmf".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_WMF;
-        else if ("pict".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_PICT;
-        else if ("jpeg".equals(imgExtension) ||
-             "jpg".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_JPEG;
-        else if ("png".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_PNG;
-        else if ("dib".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_DIB;
-        else if ("gif".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_GIF;
-        else if ("tiff".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_TIFF;
-        else if ("eps".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_EPS;
-        else if ("bmp".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_BMP;
-        else if ("wpg".equals(imgExtension)) format = XWPFDocument.PICTURE_TYPE_WPG;
-
-    return format;
-  }
-
-
 }
