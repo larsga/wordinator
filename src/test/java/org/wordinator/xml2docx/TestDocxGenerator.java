@@ -972,8 +972,32 @@ public class TestDocxGenerator extends TestCase {
     run = p.getRuns().get(1);
     XWPFPicture picture = run.getEmbeddedPictures().get(0);
     assertNotNull("Expected a picture", picture);
-    assertEquals("Expected width of 300", picture.getWidth(), 300.0);
-    assertEquals("Expected height (depth) of 300", picture.getDepth(), 300.0);
+    assertEquals("Expected width of 300", 300.0, picture.getWidth());
+    assertEquals("Expected height (depth) of 300", 300.0, picture.getDepth());
+  }
+
+  public void testSVGNoDims() throws Exception {
+    XWPFDocument doc = convert("simplewp/simplewpml-svg-no-dims.swpx",
+                               "out/svg.docx");
+    List<IBodyElement> contents = doc.getBodyElements();
+    assertEquals(1, contents.size());
+
+    Iterator<IBodyElement> it = contents.iterator();
+    IBodyElement elem = it.next();
+    assertEquals(BodyElementType.PARAGRAPH, elem.getElementType());
+
+    XWPFParagraph p = (XWPFParagraph) elem;
+    assertEquals(2, p.getRuns().size());
+
+    XWPFRun run = p.getRuns().get(0);
+    assertEquals("Image 1", run.getText(0));
+
+    run = p.getRuns().get(1);
+    XWPFPicture picture = run.getEmbeddedPictures().get(0);
+    assertNotNull("Expected a picture", picture);
+    // 200 is default
+    assertEquals("Expected width of 200", 200.0, picture.getWidth());
+    assertEquals("Expected height (depth) of 200", 200.0, picture.getDepth());
   }
 
   // ===== INTERNAL UTILITIES

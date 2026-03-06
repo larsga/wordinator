@@ -267,8 +267,8 @@ public class Image {
   private void findImageDimensions(String widthVal, String heightVal,
                                    int dotsPerInch) {
     Dimensions dims = extractImageDimensions(imageFilename, imageBytes);
-    int intrinsicWidth = (int) dims.getWidth();
-    int intrinsicHeight = (int) dims.getHeight();
+    int intrinsicWidth = dims != null ? (int) dims.getWidth() : 0;
+    int intrinsicHeight = dims != null ? (int) dims.getHeight() : 0;
 
     boolean goodWidth = false;
     boolean goodHeight = false;
@@ -363,7 +363,9 @@ public class Image {
     @Override
     public void startElement(String uri, String localName, String qName,
                              Attributes attributes) {
-      if (uri.equals(SVG_NS) && localName.equals("svg")) {
+      if (uri.equals(SVG_NS) && localName.equals("svg") &&
+          attributes.getValue("width") != null &&
+          attributes.getValue("height") != null) {
         try {
           double width = Measurement.toPixels(attributes.getValue("width"),
                                               Measurement.POINTS_PER_INCH);
